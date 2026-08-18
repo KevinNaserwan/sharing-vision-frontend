@@ -24,10 +24,10 @@ Frontend mengambil base URL API dari urutan prioritas berikut:
 2. Meta tag: `<meta name="api-base" ...>`
 3. Fallback default:
   - `/api` saat FE dijalankan dari Vercel (melalui rewrite internal)
-  - `http://be-sharing-vision.meetsin.id:8000` untuk environment lain
+  - `https://be-sharing-vision.meetsin.id` untuk environment lain
 
 > Catatan: pada Vercel, endpoint diproxy lewat route `/api/*` ke
-> `be-sharing-vision.meetsin.id:8000`.
+> `https://be-sharing-vision.meetsin.id`.
 
 ## Menjalankan Secara Lokal
 
@@ -62,7 +62,7 @@ npm test
 
 ### Real Test (Dashboard Workflow)
 
-1) Buka halaman: `https://sharing-vision-frontend-two.vercel.app/?api=https://be-sharing-vision.meetsin.id:8000`
+1) Buka halaman: `https://sharing-vision-frontend-two.vercel.app/?api=https://be-sharing-vision.meetsin.id`
 2) All Posts → verifikasi tab `Published`, `Drafts`, `Trashed`
 3) Add New → isi title/content/category, klik Publish/Draft
 4) Klik Edit pada row → edit title/content/category, update status via Publish/Draft
