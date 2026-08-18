@@ -4,8 +4,8 @@
   "outputDirectory": ".",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "http://be-sharing-vision.meetsin.id:8000/:path*"
+      "source": "/api/(.*)",
+      "destination": "http://be-sharing-vision.meetsin.id:8000/$1"
     }
   ]
 }
