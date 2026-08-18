@@ -81,6 +81,21 @@ npm test
 curl -sS https://sharing-vision-frontend-two.vercel.app/api/article/10/0
 ```
 
+## CI/CD
+
+- Frontend CI tersedia di GitHub Actions: `.github/workflows/ci.yml`
+- Pipeline memeriksa:
+  - install dependencies Node
+  - unit test (`npm test`)
+- CI otomatis jalan pada setiap `push` dan `pull_request`.
+- Untuk verifikasi full stack: pastikan workflow backend (`backend-ci`) juga berstatus ✅.
+
+## Deployment status CI/CD
+
+- Frontend: workflow `frontend-ci` di repo ini harus hijau.
+- Backend: workflow `backend-ci` di repo `sharing-vision-backend` harus hijau.
+- API proxy FE (`/api/...`) dan endpoint publik backend (`https://be-sharing-vision.meetsin.id`) valid jika end-to-end smoke test di README sebelumnya berhasil.
+
 ## Daftar Pemeriksaan Manual (Runtime)
 
 - Navigasi menu:
