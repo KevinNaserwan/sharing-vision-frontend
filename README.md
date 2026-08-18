@@ -7,8 +7,9 @@ Dashboard CRUD artikel untuk use case **Post Article**.
   - Tabs: `Published`, `Drafts`, `Trashed`
   - Tabel `title`, `category`, `action`
   - Action berisi icon `Edit` dan `Trash`; tombol `Undo` hanya muncul di tab `Trashed` untuk kembalikan ke `Draft`
-  - Search title/category
-  - Pagination dengan angka + kontrol jumlah baris tampil
+  - Search + filter title/category
+  - Pagination numerik di atas dan di bawah tabel
+  - Kontrol jumlah baris tampil
 - **Edit Article**
   - Mengubah `title`, `content`, `category`
   - Tombol aksi `Publish` dan `Draft`
@@ -17,7 +18,8 @@ Dashboard CRUD artikel untuk use case **Post Article**.
   - Tombol aksi `Publish` dan `Draft`
 - **Preview**
   - Menampilkan artikel dengan status `publish`
-  - Pagination numerik (halaman) + kontrol jumlah item per halaman
+  - Pagination numerik di atas dan di bawah daftar publish
+  - Kontrol jumlah card per halaman
   - Tidak menampilkan id artikel pada kartu list
 
 ## Konfigurasi API

@@ -23,10 +23,14 @@ const tableBody = document.getElementById('postsTableBody');
 const previewList = document.getElementById('previewList');
 const postSearchInput = document.getElementById('postSearch');
 const tablePageSizeSelect = document.getElementById('tablePageSize');
+const postsPaginationTop = document.getElementById('postsPaginationTop');
 const postsPagination = document.getElementById('postsPagination');
+const postsMetaTop = document.getElementById('postsMetaTop');
 const postsMeta = document.getElementById('postsMeta');
 const previewPageSizeSelect = document.getElementById('previewPageSize');
+const previewPaginationTop = document.getElementById('previewPaginationTop');
 const previewPagination = document.getElementById('previewPagination');
+const previewMetaTop = document.getElementById('previewMetaTop');
 const previewMeta = document.getElementById('previewMeta');
 
 let postCache = [];
@@ -203,6 +207,35 @@ function renderNumberedPagination(container, { currentPage, totalPages, onPageCh
   }
 }
 
+function renderPaginationPair({
+  top,
+  bottom,
+  textTop,
+  textBottom,
+  metaTop,
+  metaBottom,
+  currentPage,
+  totalPages,
+  onPageChange,
+}) {
+  const topMeta = textTop || '';
+  const bottomMeta = textBottom || textTop || '';
+
+  if (metaTop) {
+    metaTop.textContent = topMeta;
+  }
+  if (metaBottom) {
+    metaBottom.textContent = bottomMeta;
+  }
+
+  if (top) {
+    renderNumberedPagination(top, { currentPage, totalPages, onPageChange });
+  }
+  if (bottom) {
+    renderNumberedPagination(bottom, { currentPage, totalPages, onPageChange });
+  }
+}
+
 async function loadPosts() {
   try {
     await fetchPosts();
@@ -220,8 +253,18 @@ async function loadPosts() {
     if (!rows.length) {
       const stateName = state.activeStatus === 'publish' ? 'Publish' : state.activeStatus;
       tableBody.innerHTML = `<tr><td colspan="3" class="muted">Tidak ada artikel ${stateName} yang cocok.</td></tr>`;
-      postsMeta.textContent = 'Tidak ada data';
-      postsPagination.innerHTML = '';
+      const emptyText = 'Tidak ada data';
+      renderPaginationPair({
+        top: postsPaginationTop,
+        bottom: postsPagination,
+        metaTop: postsMetaTop,
+        metaBottom: postsMeta,
+        textTop: emptyText,
+        textBottom: emptyText,
+        currentPage: 1,
+        totalPages: 1,
+        onPageChange: () => undefined,
+      });
       return;
     }
 
@@ -268,8 +311,14 @@ async function loadPosts() {
       btn.addEventListener('click', () => moveToDraft(btn.dataset.id));
     });
 
-    postsMeta.textContent = `Menampilkan ${start + 1}-${Math.min(start + pageSize, totalRows)} dari ${totalRows} artikel`;
-    renderNumberedPagination(postsPagination, {
+    const tableMeta = `Menampilkan ${start + 1}-${Math.min(start + pageSize, totalRows)} dari ${totalRows} artikel`;
+    renderPaginationPair({
+      top: postsPaginationTop,
+      bottom: postsPagination,
+      metaTop: postsMetaTop,
+      metaBottom: postsMeta,
+      textTop: tableMeta,
+      textBottom: tableMeta,
       currentPage: state.tableOffset + 1,
       totalPages,
       onPageChange: (page) => {
@@ -277,11 +326,24 @@ async function loadPosts() {
         loadPosts();
       },
     });
+
+    postsMeta.textContent = tableMeta;
+    postsMetaTop.textContent = tableMeta;
   } catch (error) {
     notify(error.message);
     tableBody.innerHTML = '<tr><td colspan="3" class="muted">Gagal memuat data.</td></tr>';
-    postsMeta.textContent = 'Gagal memuat data';
-    postsPagination.innerHTML = '';
+    const failedText = 'Gagal memuat data';
+    renderPaginationPair({
+      top: postsPaginationTop,
+      bottom: postsPagination,
+      metaTop: postsMetaTop,
+      metaBottom: postsMeta,
+      textTop: failedText,
+      textBottom: failedText,
+      currentPage: 1,
+      totalPages: 1,
+      onPageChange: () => undefined,
+    });
   }
 }
 
@@ -397,8 +459,18 @@ async function loadPreview() {
           <p>Gunakan tab <strong>Add New</strong> lalu klik <strong>Publish</strong> untuk menampilkan artikel di preview.</p>
         </div>
       `;
-      previewMeta.textContent = 'Tidak ada data';
-      previewPagination.innerHTML = '';
+      const emptyText = 'Tidak ada data';
+      renderPaginationPair({
+        top: previewPaginationTop,
+        bottom: previewPagination,
+        metaTop: previewMetaTop,
+        metaBottom: previewMeta,
+        textTop: emptyText,
+        textBottom: emptyText,
+        currentPage: 1,
+        totalPages: 1,
+        onPageChange: () => undefined,
+      });
       return;
     }
 
@@ -413,8 +485,14 @@ async function loadPreview() {
       previewList.appendChild(article);
     }
 
-    previewMeta.textContent = `Halaman ${state.previewPage} dari ${totalPages}`;
-    renderNumberedPagination(previewPagination, {
+    const previewMetaText = `Halaman ${state.previewPage} dari ${totalPages}`;
+    renderPaginationPair({
+      top: previewPaginationTop,
+      bottom: previewPagination,
+      metaTop: previewMetaTop,
+      metaBottom: previewMeta,
+      textTop: previewMetaText,
+      textBottom: previewMetaText,
       currentPage: state.previewPage,
       totalPages,
       onPageChange: (page) => {
@@ -422,9 +500,23 @@ async function loadPreview() {
         loadPreview();
       },
     });
+    previewMeta.textContent = previewMetaText;
+    previewMetaTop.textContent = previewMetaText;
   } catch (error) {
     notify(error.message);
     previewList.innerHTML = '<div class="preview-card"><p class="muted">Gagal memuat preview.</p></div>';
+    const failedText = 'Gagal memuat preview.';
+    renderPaginationPair({
+      top: previewPaginationTop,
+      bottom: previewPagination,
+      metaTop: previewMetaTop,
+      metaBottom: previewMeta,
+      textTop: failedText,
+      textBottom: failedText,
+      currentPage: 1,
+      totalPages: 1,
+      onPageChange: () => undefined,
+    });
   }
 }
 

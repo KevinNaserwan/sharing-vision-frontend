@@ -354,6 +354,12 @@ textarea {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.pagination-top {
+  margin-top: 0;
+  margin-bottom: 8px;
 }
 
 .page-btn,
