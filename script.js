@@ -63,7 +63,7 @@ async function request(path, options = {}) {
 
   const payload = await safeJson(response);
   if (!response.ok) {
-    const msg = payload?.error || `HTTP ${response.status}`;
+    const msg = formatApiError(payload, response.status);
     throw new Error(msg);
   }
 
@@ -80,11 +80,63 @@ async function safeJson(response) {
   }
 }
 
-function notify(message) {
+function formatApiError(payload, status) {
+  if (!payload) {
+    return `HTTP ${status}`;
+  }
+
+  if (typeof payload === 'string') {
+    return payload;
+  }
+
+  if (typeof payload.errors === 'object' && payload.errors !== null) {
+    const map = {
+      title: 'Judul',
+      content: 'Konten',
+      category: 'Kategori',
+      status: 'Status',
+    };
+    const fieldMessages = Object.entries(payload.errors)
+      .map(([field, reason]) => `${map[field] || field}: ${reason}`)
+      .filter((line) => line.length > 0);
+
+    if (fieldMessages.length > 0) {
+      const head = typeof payload.message === 'string' ? payload.message : 'Validasi gagal';
+      return `${head}: ${fieldMessages.join('; ')}`;
+    }
+  }
+
+  if (typeof payload.error === 'string' && payload.error.length > 0) {
+    return payload.error;
+  }
+
+  if (typeof payload.message === 'string' && payload.message.length > 0) {
+    return payload.message;
+  }
+
+  try {
+    return JSON.stringify(payload);
+  } catch {
+    return `HTTP ${status}`;
+  }
+}
+
+function notify(message, type = 'info') {
   const toast = document.getElementById('toast');
+  if (!toast) return;
+
+  const valid = new Set(['success', 'error', 'info']);
+  const normalized = valid.has(type) ? type : 'info';
+  toast.classList.remove('success', 'error', 'info');
+  toast.classList.add(normalized);
+
   toast.textContent = message;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 1300);
+
+  if (toast.__timeout) {
+    clearTimeout(toast.__timeout);
+  }
+  toast.__timeout = setTimeout(() => toast.classList.remove('show'), 2200);
 }
 
 function closeConfirmModal() {
@@ -399,7 +451,7 @@ async function openArticlePage(articleId) {
       renderArticlePage(fetched);
     }
   } catch {
-    notify('Gagal memuat artikel untuk dibaca selengkapnya');
+    notify('Gagal memuat artikel untuk dibaca selengkapnya', 'error');
   }
 }
 
@@ -536,7 +588,7 @@ async function loadPosts() {
     postsMeta.textContent = tableMeta;
     postsMetaTop.textContent = tableMeta;
   } catch (error) {
-    notify(error.message);
+    notify(error.message, 'error');
     tableBody.innerHTML = '<tr><td colspan="3" class="muted">Gagal memuat data.</td></tr>';
     const failedText = 'Gagal memuat data';
     renderPaginationPair({
@@ -561,7 +613,7 @@ async function openEdit(id) {
   }
 
   if (!post) {
-    notify('Data tidak ditemukan');
+    notify('Data tidak ditemukan', 'error');
     return;
   }
 
@@ -576,12 +628,12 @@ async function openEdit(id) {
 async function moveToTrash(id) {
   const post = postCache.find((item) => String(item.id) === String(id));
   if (!post) {
-    notify('Data tidak ditemukan');
+    notify('Data tidak ditemukan', 'error');
     return;
   }
 
   if (getStatus(post) === 'thrash') {
-    notify('Artikel sudah dalam Trashed');
+    notify('Artikel sudah dalam Trashed', 'error');
     return;
   }
 
@@ -602,23 +654,23 @@ async function moveToTrash(id) {
       }),
     });
 
-    notify('Dipindahkan ke trash');
+    notify('Dipindahkan ke trash', 'success');
     postCache = [];
     await loadPosts();
   } catch (error) {
-    notify(error.message);
+    notify(error.message, 'error');
   }
 }
 
 async function moveToDraft(id) {
   const post = postCache.find((item) => String(item.id) === String(id));
   if (!post) {
-    notify('Data tidak ditemukan');
+    notify('Data tidak ditemukan', 'error');
     return;
   }
 
   if (getStatus(post) === 'draft') {
-    notify('Artikel sudah dalam draft');
+    notify('Artikel sudah dalam draft', 'error');
     return;
   }
 
@@ -639,11 +691,11 @@ async function moveToDraft(id) {
       }),
     });
 
-    notify('Status artikel dikembalikan ke Draft');
+    notify('Status artikel dikembalikan ke Draft', 'success');
     postCache = [];
     await loadPosts();
   } catch (error) {
-    notify(error.message);
+    notify(error.message, 'error');
   }
 }
 
@@ -765,7 +817,7 @@ async function loadPreview() {
     previewMeta.textContent = previewMetaText;
     previewMetaTop.textContent = previewMetaText;
   } catch (error) {
-    notify(error.message);
+    notify(error.message, 'error');
     previewList.innerHTML = '<article class="preview-article is-empty"><p class="preview-title">Gagal memuat preview.</p><p class="preview-meta">Cek koneksi ke endpoint lalu coba lagi.</p></article>';
     const failedText = 'Gagal memuat preview.';
     renderPaginationPair({
@@ -834,7 +886,7 @@ document.querySelectorAll('[data-save-as]').forEach((btn) => {
 
     try {
       await savePost('/article/', payload);
-      notify('Artikel ditambahkan');
+      notify('Artikel ditambahkan', 'success');
       document.getElementById('addForm').reset();
       postCache = [];
       state.activeStatus = 'publish';
@@ -843,7 +895,7 @@ document.querySelectorAll('[data-save-as]').forEach((btn) => {
       showView('all-posts');
       loadPosts();
     } catch (error) {
-      notify(error.message);
+      notify(error.message, 'error');
     }
   });
 });
@@ -885,14 +937,14 @@ async function saveEdit(status) {
       body: JSON.stringify(payload),
     });
 
-    notify('Artikel berhasil diperbarui');
+    notify('Artikel berhasil diperbarui', 'success');
     clearEditCache();
     postCache = [];
     setActiveMenu('all-posts');
     showView('all-posts');
     await loadPosts();
   } catch (error) {
-    notify(error.message);
+    notify(error.message, 'error');
   }
 }
 

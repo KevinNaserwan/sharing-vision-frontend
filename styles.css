@@ -601,17 +601,43 @@ textarea {
   position: fixed;
   top: 18px;
   right: 18px;
-  background: #0f172a;
-  color: #fff;
+  background: #0b1733;
+  color: #f8fafc;
+  border: 1px solid transparent;
+  max-width: 380px;
   padding: 10px 14px;
   border-radius: 10px;
   opacity: 0;
-  transition: opacity 180ms ease;
+  transform: translateY(-4px);
+  transition: opacity 180ms ease, transform 180ms ease;
+  white-space: pre-line;
+  word-break: break-word;
+  box-sizing: border-box;
+  z-index: 70;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
 }
 
 .toast.show {
   opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.success {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+
+.toast.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fda4af;
+}
+
+.toast.info {
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-color: #93c5fd;
 }
 
 .confirm-modal {
