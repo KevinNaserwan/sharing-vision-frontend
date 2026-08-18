@@ -14,22 +14,39 @@ const previewList = document.getElementById('previewList');
 let postCache = [];
 
 function getApiBase() {
-  const meta = document.querySelector('meta[name="api-base"]')?.content?.trim();
-  if (meta) {
-    return meta;
+  const q = new URLSearchParams(window.location.search).get('api');
+  if (q && q.trim()) {
+    return normalizeApiBase(q.trim());
   }
 
   const fromWindow = window.__SHARING_VISION_API_BASE__?.toString().trim();
   if (fromWindow) {
-    return fromWindow;
+    return normalizeApiBase(fromWindow);
   }
 
-  const q = new URLSearchParams(window.location.search).get('api');
-  if (q && q.trim()) {
-    return q.trim();
+  const meta = document.querySelector('meta[name="api-base"]')?.content?.trim();
+  if (meta) {
+    return normalizeApiBase(meta);
+  }
+
+  if (window.location.hostname.endsWith('.vercel.app')) {
+    return '/api';
   }
 
   return 'https://be-sharing-vision.meetsin.id';
+}
+
+function normalizeApiBase(base) {
+  const value = String(base || '').trim();
+  if (!value) {
+    return value;
+  }
+
+  if (value.startsWith('/')) {
+    return value.replace(/\/+$/, '');
+  }
+
+  return value.replace(/\/+$/, '');
 }
 
 async function request(path, options = {}) {

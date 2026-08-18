@@ -20,11 +20,14 @@ Dashboard CRUD artikel untuk use case **Post Article**.
 ## Konfigurasi API
 
 Frontend mengambil base URL API dari urutan prioritas berikut:
-1. Meta tag: `<meta name="api-base" ...>`
-2. Query string: `?api=...`
-3. Fallback default: `https://be-sharing-vision.meetsin.id`
+1. Query string: `?api=...`
+2. Meta tag: `<meta name="api-base" ...>`
+3. Fallback default:
+   - `/api` saat FE dijalankan dari Vercel (melalui rewrite internal)
+   - `https://be-sharing-vision.meetsin.id` untuk environment lain
 
-> Catatan: jika domain backend sudah stabil, ubah meta tag `api-base` di `index.html`.
+> Catatan: pada Vercel, endpoint diproxy lewat route `/api/*` ke backend di
+> `be-sharing-vision.meetsin.id:8000`.
 
 ## Menjalankan Secara Lokal
 
