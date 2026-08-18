@@ -89,6 +89,12 @@ function formatApiError(payload, status) {
     return payload;
   }
 
+  const asString = (value) => {
+    if (typeof value === 'string') return value.trim();
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    return '';
+  };
+
   if (typeof payload.errors === 'object' && payload.errors !== null) {
     const map = {
       title: 'Judul',
@@ -96,18 +102,45 @@ function formatApiError(payload, status) {
       category: 'Kategori',
       status: 'Status',
     };
-    const fieldMessages = Object.entries(payload.errors)
-      .map(([field, reason]) => `${map[field] || field}: ${reason}`)
+
+    const collect = [];
+
+    if (Array.isArray(payload.errors)) {
+      payload.errors.forEach((item) => {
+        if (!item) return;
+        if (typeof item === 'string') {
+          const parsed = asString(item);
+          if (parsed) collect.push(parsed);
+          return;
+        }
+        if (typeof item.field === 'string' && typeof item.message === 'string') {
+          collect.push(`${map[item.field] || item.field}: ${item.message}`);
+        }
+      });
+    } else {
+      Object.entries(payload.errors)
+        .forEach(([field, reason]) => {
+          const text = asString(reason);
+          if (text) {
+            collect.push(`${map[field] || field}: ${text}`);
+          }
+        });
+    }
+
+    const fieldMessages = collect
       .filter((line) => line.length > 0);
 
     if (fieldMessages.length > 0) {
-      const head = typeof payload.message === 'string' ? payload.message : 'Validasi gagal';
-      return `${head}: ${fieldMessages.join('; ')}`;
+      return `Validasi gagal: ${fieldMessages.join('; ')}`;
     }
   }
 
   if (typeof payload.error === 'string' && payload.error.length > 0) {
-    return payload.error;
+    const msg = payload.error.trim();
+    if (/validation/i.test(msg) && payload.message !== msg) {
+      return `Validasi gagal: ${msg}`;
+    }
+    return msg;
   }
 
   if (typeof payload.message === 'string' && payload.message.length > 0) {
