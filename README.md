@@ -38,6 +38,9 @@ Untuk mengarah ke backend lokal: `http://localhost:5173/?api=http://localhost:80
 
 ## Deploy ke Vercel
 
+Production URL:
+- https://sharing-vision-frontend-two.vercel.app
+
 1. Push repo ke GitHub.
 2. Import di Vercel.
 3. Framework preset: **Other**.
