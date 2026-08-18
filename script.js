@@ -32,12 +32,10 @@ const previewPaginationTop = document.getElementById('previewPaginationTop');
 const previewPagination = document.getElementById('previewPagination');
 const previewMetaTop = document.getElementById('previewMetaTop');
 const previewMeta = document.getElementById('previewMeta');
-const articleView = document.getElementById('article-view');
 const articleTitle = document.getElementById('articleTitle');
 const articleMeta = document.getElementById('articleMeta');
 const articleCategory = document.getElementById('articleCategory');
 const articleContent = document.getElementById('articleContent');
-const backFromPreview = document.getElementById('backFromPreview');
 const confirmModal = document.getElementById('confirmModal');
 const confirmModalTitle = document.getElementById('confirmModalTitle');
 const confirmModalMessage = document.getElementById('confirmModalMessage');
@@ -363,7 +361,7 @@ function formatArticleDate(dateValue) {
 }
 
 function renderArticlePage(post) {
-  if (!articleView || !articleTitle || !articleMeta || !articleCategory || !articleContent || !post) {
+  if (!articleTitle || !articleMeta || !articleCategory || !articleContent || !post) {
     return;
   }
 
@@ -863,13 +861,6 @@ document.getElementById('backFromEdit').addEventListener('click', () => {
   showView('all-posts');
   setActiveMenu('all-posts');
 });
-
-if (backFromPreview) {
-  backFromPreview.addEventListener('click', () => {
-    showView('preview');
-    setActiveMenu('preview');
-  });
-}
 
 async function saveEdit(status) {
   const id = document.getElementById('editId').value;
