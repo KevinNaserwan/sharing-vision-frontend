@@ -200,10 +200,32 @@ function buildPageNumbers(totalPages, currentPage) {
   return pages;
 }
 
-function renderNumberedPagination(container, { currentPage, totalPages, onPageChange }) {
+function renderNumberedPagination(container, {
+  currentPage,
+  totalPages,
+  onPageChange,
+  showFirstLast,
+}) {
   container.innerHTML = '';
   if (totalPages < 2) {
+    if (showFirstLast) {
+      const prev = renderNavButton({ label: 'Previous', page: 1, disabled: true });
+      const next = renderNavButton({ label: 'Next', page: 1, disabled: true });
+      container.append(prev, next);
+    }
     return;
+  }
+
+  if (showFirstLast) {
+    const prevDisabled = currentPage <= 1;
+    container.appendChild(
+      renderNavButton({
+        label: 'Previous',
+        page: Math.max(1, currentPage - 1),
+        disabled: prevDisabled,
+        onPageChange,
+      }),
+    );
   }
 
   const pageNumbers = buildPageNumbers(totalPages, currentPage);
@@ -227,6 +249,33 @@ function renderNumberedPagination(container, { currentPage, totalPages, onPageCh
     });
     container.appendChild(btn);
   }
+
+  if (showFirstLast) {
+    const nextDisabled = currentPage >= totalPages;
+    container.appendChild(
+      renderNavButton({
+        label: 'Next',
+        page: Math.min(totalPages, currentPage + 1),
+        disabled: nextDisabled,
+        onPageChange,
+      }),
+    );
+  }
+}
+
+function renderNavButton({ label, page, onPageChange, disabled }) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'page-btn page-nav';
+  btn.textContent = label;
+  if (disabled) {
+    btn.disabled = true;
+    return btn;
+  }
+  btn.addEventListener('click', () => {
+    onPageChange(page);
+  });
+  return btn;
 }
 
 function renderPaginationPair({
@@ -251,10 +300,20 @@ function renderPaginationPair({
   }
 
   if (top) {
-    renderNumberedPagination(top, { currentPage, totalPages, onPageChange });
+    renderNumberedPagination(top, {
+      currentPage,
+      totalPages,
+      onPageChange,
+      showFirstLast: totalPages > 1,
+    });
   }
   if (bottom) {
-    renderNumberedPagination(bottom, { currentPage, totalPages, onPageChange });
+    renderNumberedPagination(bottom, {
+      currentPage,
+      totalPages,
+      onPageChange,
+      showFirstLast: totalPages > 1,
+    });
   }
 }
 
@@ -502,19 +561,33 @@ async function loadPreview() {
       const article = document.createElement('article');
       article.className = 'preview-article';
       const category = normalizeText(post.category);
+      const title = normalizeText(post.title);
       const dateText = formatPreviewDate(post.updated_date || post.created_date);
       const excerpt = buildExcerpt(post.content, 220);
+      const readTime = Math.max(1, Math.round((normalizeText(post.content || '').split(' ').filter(Boolean).length || 0) / 140));
+
+      const visualText = title ? title.slice(0, 2).toUpperCase() : 'AR';
 
       article.innerHTML = `
-        <div class="preview-article-header">
-          <h3 class="preview-title">${escapeHtml(post.title)}</h3>
-          <span class="preview-status">Publish</span>
+        <div class="preview-visual" aria-hidden="true">
+          <span>${escapeHtml(visualText)}</span>
         </div>
-        <div class="preview-meta">
-          ${dateText ? `<span>${escapeHtml(dateText)}</span>` : ''}
-          ${category ? `<span class="meta-sep"></span><span class="preview-cat">${escapeHtml(category)}</span>` : ''}
+        <div class="preview-content-body">
+          <div class="preview-article-header">
+            <h3 class="preview-title">${escapeHtml(post.title)}</h3>
+            <span class="preview-status">Publish</span>
+          </div>
+          <div class="preview-meta">
+            ${dateText ? `<span>${escapeHtml(dateText)}</span>` : ''}
+            ${category ? `<span class="meta-sep"></span><span class="preview-cat">${escapeHtml(category)}</span>` : ''}
+            <span class="meta-sep"></span>
+            <span>${readTime} min read</span>
+          </div>
+          <p class="preview-excerpt">${escapeHtml(excerpt || 'Tidak ada konten artikel.')}</p>
+          <div class="preview-footer">
+            <a href="#" class="preview-read-link" aria-label="Baca ${escapeHtml(title)}">Baca selengkapnya →</a>
+          </div>
         </div>
-        <p class="preview-excerpt">${escapeHtml(excerpt || 'Tidak ada konten artikel.')}</p>
       `;
       previewList.appendChild(article);
     }
