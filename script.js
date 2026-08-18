@@ -36,6 +36,7 @@ const articleTitle = document.getElementById('articleTitle');
 const articleMeta = document.getElementById('articleMeta');
 const articleCategory = document.getElementById('articleCategory');
 const articleContent = document.getElementById('articleContent');
+const backFromPreview = document.getElementById('backFromPreview');
 const confirmModal = document.getElementById('confirmModal');
 const confirmModalTitle = document.getElementById('confirmModalTitle');
 const confirmModalMessage = document.getElementById('confirmModalMessage');
@@ -861,6 +862,13 @@ document.getElementById('backFromEdit').addEventListener('click', () => {
   showView('all-posts');
   setActiveMenu('all-posts');
 });
+
+if (backFromPreview) {
+  backFromPreview.addEventListener('click', () => {
+    showView('preview');
+    setActiveMenu('preview');
+  });
+}
 
 async function saveEdit(status) {
   const id = document.getElementById('editId').value;

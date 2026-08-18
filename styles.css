@@ -516,15 +516,10 @@ textarea {
   gap: 12px;
 }
 
-#article-view {
-  min-height: clamp(58vh, calc(100vh - 160px), 88vh);
-  display: grid;
-  overflow: visible;
-}
-
 #article-view.panel {
   min-height: clamp(58vh, calc(100vh - 160px), 88vh);
   padding-bottom: 16px;
+  overflow: visible;
 }
 
 .article-meta {
