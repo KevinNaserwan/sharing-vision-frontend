@@ -6,12 +6,31 @@ const state = {
   previewLimit: 5,
 };
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = getApiBase();
 const views = ['all-posts', 'add-new', 'edit-post', 'preview'];
 
 const tableBody = document.getElementById('postsTableBody');
 const previewList = document.getElementById('previewList');
 let postCache = [];
+
+function getApiBase() {
+  const meta = document.querySelector('meta[name="api-base"]')?.content?.trim();
+  if (meta) {
+    return meta;
+  }
+
+  const fromWindow = window.__SHARING_VISION_API_BASE__?.toString().trim();
+  if (fromWindow) {
+    return fromWindow;
+  }
+
+  const q = new URLSearchParams(window.location.search).get('api');
+  if (q && q.trim()) {
+    return q.trim();
+  }
+
+  return 'http://localhost:8000';
+}
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -157,7 +176,8 @@ async function savePost(url, payload) {
 function clearEditCache() {
   state.editId = null;
   document.getElementById('editId').value = '';
-  document.getElementById('editForm').reset?.();
+  const form = document.getElementById('editForm');
+  if (form) form.reset();
 }
 
 async function loadPreview() {
@@ -187,7 +207,6 @@ async function loadPreview() {
     notify(error.message);
   }
 }
-
 
 document.querySelectorAll('.menu-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
