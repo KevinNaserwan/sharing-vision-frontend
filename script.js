@@ -137,6 +137,54 @@ function formatApiError(payload, status) {
 
   if (typeof payload.error === 'string' && payload.error.length > 0) {
     const msg = payload.error.trim();
+    const lower = msg.toLowerCase();
+
+    if (lower === 'validation failed' && typeof payload.message === 'string') {
+      const msgLower = payload.message.toLowerCase();
+      if (msgLower.includes('validation')) {
+        return 'Validasi gagal: perbaiki data sesuai aturan validasi';
+      }
+      return payload.message;
+    }
+
+    if (msg.startsWith('{') || msg.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(msg);
+        if (typeof parsed === 'object' && parsed !== null) {
+          const maybeErrors = parsed.errors;
+          const map = {
+            title: 'Judul',
+            content: 'Konten',
+            category: 'Kategori',
+            status: 'Status',
+          };
+
+          const collect = [];
+          if (maybeErrors) {
+            if (Array.isArray(maybeErrors)) {
+              maybeErrors.forEach((item) => {
+                if (!item) return;
+                if (typeof item.field === 'string' && typeof item.message === 'string') {
+                  collect.push(`${map[item.field] || item.field}: ${item.message}`);
+                }
+              });
+            } else {
+              Object.entries(maybeErrors).forEach(([field, reason]) => {
+                const text = asString(reason);
+                if (text) collect.push(`${map[field] || field}: ${text}`);
+              });
+            }
+          }
+
+          if (collect.length > 0) {
+            return `Validasi gagal: ${collect.join('; ')}`;
+          }
+        }
+      } catch {
+        // fallback below
+      }
+    }
+
     if (/validation/i.test(msg) && payload.message !== msg) {
       return `Validasi gagal: ${msg}`;
     }
