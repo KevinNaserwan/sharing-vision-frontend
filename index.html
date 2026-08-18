@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sharing Vision Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h1>Sharing Vision</h1>
+        <nav>
+          <button class="menu-btn active" data-view="all-posts">All Posts</button>
+          <button class="menu-btn" data-view="add-new">Add New</button>
+          <button class="menu-btn" data-view="preview">Preview</button>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <section id="all-posts" class="panel active-view">
+          <div class="panel-header">
+            <h2>All Posts</h2>
+          </div>
+
+          <div class="tab-strip" id="statusTabs">
+            <button class="tab-btn active" data-status="publish">Published</button>
+            <button class="tab-btn" data-status="draft">Drafts</button>
+            <button class="tab-btn" data-status="thrash">Trashed</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="postsTableBody">
+                <tr>
+                  <td colspan="3" class="muted">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="add-new" class="panel">
+          <div class="panel-header"><h2>Add New</h2></div>
+          <form id="addForm" class="post-form">
+            <label>
+              Title
+              <input id="addTitle" type="text" maxlength="200" required />
+            </label>
+            <label>
+              Content
+              <textarea id="addContent" rows="8" minlength="200" required></textarea>
+            </label>
+            <label>
+              Category
+              <input id="addCategory" type="text" maxlength="100" required />
+            </label>
+            <div class="button-row">
+              <button type="button" class="btn primary" data-save-as="publish">Publish</button>
+              <button type="button" class="btn secondary" data-save-as="draft">Draft</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="edit-post" class="panel">
+          <div class="panel-header">
+            <h2>Edit Article</h2>
+            <button type="button" class="btn ghost" id="backFromEdit">Back</button>
+          </div>
+          <form id="editForm" class="post-form">
+            <input type="hidden" id="editId" />
+            <label>
+              Title
+              <input id="editTitle" type="text" maxlength="200" required />
+            </label>
+            <label>
+              Content
+              <textarea id="editContent" rows="8" minlength="200" required></textarea>
+            </label>
+            <label>
+              Category
+              <input id="editCategory" type="text" maxlength="100" required />
+            </label>
+            <div class="button-row">
+              <button type="button" class="btn primary" data-save-edit-as="publish">Publish</button>
+              <button type="button" class="btn secondary" data-save-edit-as="draft">Draft</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="preview" class="panel">
+          <div class="panel-header">
+            <h2>Preview (Publish only)</h2>
+          </div>
+          <div class="preview-list" id="previewList"></div>
+          <div class="button-row">
+            <button id="previewPrev" class="btn ghost">Previous</button>
+            <button id="previewNext" class="btn ghost">Next</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js" type="module"></script>
+  </body>
+</html>
