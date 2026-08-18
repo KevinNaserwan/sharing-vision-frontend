@@ -603,6 +603,65 @@ textarea {
   opacity: 1;
 }
 
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: rgba(7, 12, 22, 0.42);
+  z-index: 60;
+  padding: 16px;
+}
+
+.confirm-modal.is-open {
+  display: grid;
+}
+
+.confirm-panel {
+  width: min(420px, 100%);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  box-shadow: var(--shadow);
+  padding: 18px 18px 16px;
+}
+
+.confirm-panel h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.confirm-panel p {
+  margin: 0 0 14px;
+  color: var(--text-soft);
+  line-height: 1.55;
+  font-size: 14px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.confirm-actions .btn.danger {
+  background: rgba(230, 70, 95, 0.11);
+  border-color: rgba(230, 70, 95, 0.45);
+  color: #9a1f37;
+}
+
+.confirm-actions .btn.danger:hover {
+  background: rgba(230, 70, 95, 0.19);
+}
+
+.confirm-actions .btn.ghost {
+  min-width: 90px;
+}
+
+.confirm-actions .btn.danger {
+  min-width: 90px;
+}
+
 @keyframes fadeIn {
   from { opacity: 0.75; transform: translateY(2px); }
   to { opacity: 1; transform: none; }

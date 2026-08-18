@@ -38,8 +38,14 @@ const articleMeta = document.getElementById('articleMeta');
 const articleCategory = document.getElementById('articleCategory');
 const articleContent = document.getElementById('articleContent');
 const backFromPreview = document.getElementById('backFromPreview');
+const confirmModal = document.getElementById('confirmModal');
+const confirmModalTitle = document.getElementById('confirmModalTitle');
+const confirmModalMessage = document.getElementById('confirmModalMessage');
+const confirmOkBtn = document.getElementById('confirmOkBtn');
+const confirmCancelBtn = document.getElementById('confirmCancelBtn');
 
 let postCache = [];
+let confirmResolver = null;
 
 function getApiBase() {
   return resolveApiBase({
@@ -81,6 +87,75 @@ function notify(message) {
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 1300);
 }
+
+function closeConfirmModal() {
+  if (!confirmModal) return;
+  confirmModal.classList.remove('is-open');
+  confirmModal.setAttribute('aria-hidden', 'true');
+  if (confirmResolver) {
+    const done = confirmResolver;
+    confirmResolver = null;
+    done(false);
+  }
+}
+
+function askConfirm({
+  title = 'Konfirmasi',
+  message = 'Lanjutkan aksi ini?',
+  confirmText = 'Ya',
+  cancelText = 'Batal',
+}) {
+  if (!confirmModal || !confirmModalTitle || !confirmModalMessage || !confirmOkBtn || !confirmCancelBtn) {
+    return Promise.resolve(window.confirm(message));
+  }
+
+  return new Promise((resolve) => {
+    if (confirmResolver) {
+      const prev = confirmResolver;
+      confirmResolver = null;
+      prev(false);
+    }
+
+    confirmResolver = resolve;
+    confirmModalTitle.textContent = title;
+    confirmModalMessage.textContent = message;
+    confirmOkBtn.textContent = confirmText;
+    confirmCancelBtn.textContent = cancelText;
+
+    confirmModal.classList.add('is-open');
+    confirmModal.setAttribute('aria-hidden', 'false');
+  });
+}
+
+confirmOkBtn?.addEventListener('click', () => {
+  if (!confirmModal) return;
+  confirmModal.classList.remove('is-open');
+  confirmModal.setAttribute('aria-hidden', 'true');
+  if (confirmResolver) {
+    const done = confirmResolver;
+    confirmResolver = null;
+    done(true);
+  }
+});
+
+confirmCancelBtn?.addEventListener('click', closeConfirmModal);
+
+if (confirmModal) {
+  confirmModal.addEventListener('click', (event) => {
+    if (event.target === confirmModal) {
+      closeConfirmModal();
+    }
+  });
+}
+
+document.addEventListener('keydown', (event) => {
+  if (!confirmModal?.classList.contains('is-open')) {
+    return;
+  }
+  if (event.key === 'Escape') {
+    closeConfirmModal();
+  }
+});
 
 function setActiveMenu(view) {
   document.querySelectorAll('.menu-btn').forEach((btn) => {
@@ -519,6 +594,14 @@ async function moveToTrash(id) {
   }
 
   try {
+    const approved = await askConfirm({
+      title: 'Pindahkan ke Trashed',
+      message: `Yakin ingin memindahkan artikel "${post.title}" ke Trashed?`,
+      confirmText: 'Ya, Pindahkan',
+      cancelText: 'Batal',
+    });
+    if (!approved) return;
+
     await request(`/article/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
@@ -548,6 +631,14 @@ async function moveToDraft(id) {
   }
 
   try {
+    const approved = await askConfirm({
+      title: 'Kembalikan ke Draft',
+      message: `Yakin ingin mengembalikan artikel "${post.title}" ke Draft?`,
+      confirmText: 'Ya, Kembalikan',
+      cancelText: 'Batal',
+    });
+    if (!approved) return;
+
     await request(`/article/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
