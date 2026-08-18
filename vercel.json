@@ -4,8 +4,20 @@
   "outputDirectory": ".",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "http://be-sharing-vision.meetsin.id:8000/$1"
+      "source": "/api/article",
+      "destination": "http://be-sharing-vision.meetsin.id:8000/article/"
+    },
+    {
+      "source": "/api/article/",
+      "destination": "http://be-sharing-vision.meetsin.id:8000/article/"
+    },
+    {
+      "source": "/api/article/:path*",
+      "destination": "http://be-sharing-vision.meetsin.id:8000/article/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "http://be-sharing-vision.meetsin.id:8000/:path*"
     }
   ]
 }
