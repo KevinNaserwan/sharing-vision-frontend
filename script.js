@@ -112,7 +112,7 @@ async function loadPosts() {
 
       if (showUndo) {
         actionButtons.push(`
-          <button class="action-btn undo" data-action="undo" data-id="${post.id}" data-status="${status}" title="Kembalikan ke Draft">
+          <button class="action-btn undo" data-action="undo" data-id="${post.id}" title="Kembalikan ke Draft">
             ↩️
           </button>
         `);
@@ -244,10 +244,15 @@ async function loadPreview() {
 
     previewList.innerHTML = '';
     if (!pageItems.length) {
-      previewList.innerHTML = '<div class="preview-card"><p class="muted">Tidak ada artikel publish.</p></div>';
+      previewList.innerHTML = `
+        <div class="preview-card">
+          <p class="muted">Tidak ada artikel publish.</p>
+          <p>Gunakan tab <strong>Add New</strong> lalu klik <strong>Publish</strong> untuk menampilkan artikel di preview.</p>
+        </div>
+      `;
       prevBtn.disabled = state.previewOffset === 0;
       nextBtn.disabled = true;
-      meta.textContent = 'Tidak ada artikel publish.';
+      meta.textContent = 'Preview kosong.';
       return;
     }
 
