@@ -29,7 +29,7 @@ function getApiBase() {
     return q.trim();
   }
 
-  return 'http://localhost:8000';
+  return 'https://be-sharing-vision.meetsin.id';
 }
 
 async function request(path, options = {}) {
@@ -188,6 +188,7 @@ async function loadPreview() {
     previewList.innerHTML = '';
     if (!published.length) {
       previewList.innerHTML = '<div class="preview-card"><p class="muted">Tidak ada artikel publish.</p></div>';
+      return;
     }
 
     for (const post of published) {
