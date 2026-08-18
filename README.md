@@ -1,31 +1,32 @@
 # sharing-vision-frontend
 
-Frontend dashboard artikel untuk use case Sharing Vision.
+Dashboard CRUD artikel untuk use case **Post Article**.
 
-## Fitur
-
+## Fitur Utama
 - **All Posts**
   - Tabs: `Published`, `Drafts`, `Trashed`
-  - Tabel menampilkan `title`, `category`, dan `action`
-  - `Action`: icon Edit dan icon Thrashed
+  - Tabel `title`, `category`, `action`
+  - Action berisi `Edit` dan `Thrashed`
 - **Edit Article**
-  - Edit `title`, `content`, `category`
-  - Tombol `Publish` dan `Draft`
+  - Mengubah `title`, `content`, `category`
+  - Tombol aksi `Publish` dan `Draft`
 - **Add New**
   - Form `Title`, `Content`, `Category`
-  - Tombol `Publish` dan `Draft`
+  - Tombol aksi `Publish` dan `Draft`
 - **Preview**
-  - Menampilkan artikel dengan `status = publish` dan pagination
+  - Menampilkan artikel dengan status `publish`
+  - Navigasi `Previous` dan `Next` (pagination)
 
 ## Konfigurasi API
 
-Aplikasi membaca API base dari urutan berikut:
+Frontend mengambil base URL API dari urutan prioritas berikut:
+1. Meta tag: `<meta name="api-base" ...>`
+2. Query string: `?api=...`
+3. Fallback default: `https://be-sharing-vision.meetsin.id`
 
-1. `<meta name="api-base" content="...">` di `index.html`
-2. Query string `?api=https://your-backend.com`
-3. Fallback `https://be-sharing-vision.meetsin.id`
+> Catatan: jika domain backend sudah stabil, ubah meta tag `api-base` di `index.html`.
 
-## Running Lokal
+## Menjalankan Secara Lokal
 
 ```bash
 cd sharing-vision-frontend
@@ -34,20 +35,29 @@ python -m http.server 5173
 
 Buka: `http://localhost:5173`
 
-Untuk mengarah ke backend lokal: `http://localhost:5173/?api=http://localhost:8000`
+Opsional untuk API lokal:
+`http://localhost:5173/?api=http://localhost:8000`
 
-## Deploy ke Vercel
+## Deployment (Vercel)
 
-Production URL:
-- https://sharing-vision-frontend-two.vercel.app
+- Project static (HTML/CSS/JS)
+- Framework preset: **Other** (atau auto-detect)
+- Build command: kosong
+- Output directory: `.`
 
-1. Push repo ke GitHub.
-2. Import di Vercel.
-3. Framework preset: **Other**.
-4. Build Command: ` ` (kosong).
-5. Output Directory: `.`.
-6. Deploy.
+Domain production saat ini:
+- `https://sharing-vision-frontend-two.vercel.app`
 
-## Repo
+## Daftar Pemeriksaan Manual (Runtime)
 
-- Frontend: https://github.com/KevinNaserwan/sharing-vision-frontend
+- Navigasi menu:
+  - `All Posts`, `Add New`, `Preview`
+- Tabs di All Posts:
+  - Filter ke `Published`, `Drafts`, `Trashed`
+- Tombol:
+  - `Publish` / `Draft` saat tambah dan edit
+- Aksi:
+  - Klik icon edit → membuka form edit
+  - Klik icon trash → status berubah ke `thrash`
+- Pagination:
+  - `Previous` dan `Next` aktif/nonaktif sesuai offset
