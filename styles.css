@@ -506,6 +506,14 @@ textarea {
 .article-page {
   max-width: 920px;
   margin: 6px auto 0;
+  min-height: calc(100vh - 248px);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+}
+
+#article-view {
+  min-height: calc(100vh - 248px);
 }
 
 .article-meta {
@@ -545,6 +553,7 @@ textarea {
   word-break: break-word;
   border-top: 1px solid var(--line);
   padding-top: 14px;
+  overflow-wrap: anywhere;
 }
 
 .article-content + .article-content {
