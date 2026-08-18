@@ -61,3 +61,15 @@ test('filterPostsByStatus returns matching posts', () => {
   assert.strictEqual(published.length, 2);
   assert.deepStrictEqual(published.map((item) => item.id), [1, 3]);
 });
+
+test('filterPostsByStatus is case-insensitive', () => {
+  const posts = [
+    { id: 1, status: 'Publish' },
+    { id: 2, status: 'DRAFT' },
+    { id: 3, status: 'thrash' },
+  ];
+  const published = filterPostsByStatus(posts, 'publish');
+  const draft = filterPostsByStatus(posts, 'draft');
+  assert.deepStrictEqual(published.map((item) => item.id), [1]);
+  assert.deepStrictEqual(draft.map((item) => item.id), [2]);
+});

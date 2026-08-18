@@ -129,6 +129,45 @@ h2 {
   background: #edf2ff;
 }
 
+.list-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.search-field,
+.page-size-field {
+  display: grid;
+  gap: 6px;
+}
+
+.search-label {
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.search-field {
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-field input,
+.page-size-field select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 11px;
+  background: #f8fbff;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.page-size-field select {
+  min-width: 88px;
+}
+
 .table-wrap {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -308,6 +347,41 @@ textarea {
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.page-btn,
+.pagination-controls .page-btn {
+  min-width: 36px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #f8fbff;
+  color: #273b8a;
+  padding: 8px 10px;
+}
+
+.page-btn.is-current,
+.pagination-controls .page-btn.is-current {
+  background: var(--brand);
+  border-color: #2d57ff;
+  color: #fff;
+  font-weight: 700;
+}
+
+.pagination-ellipsis {
+  min-width: 32px;
+  color: var(--text-soft);
+  text-align: center;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pagination-meta {

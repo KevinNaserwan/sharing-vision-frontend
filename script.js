@@ -7,9 +7,13 @@ const state = {
   activeView: 'all-posts',
   activeStatus: 'publish',
   editId: null,
-  previewOffset: 0,
+  tableOffset: 0,
+  tableLimit: 10,
+  tableSearchQuery: '',
+  previewPage: 1,
   previewLimit: 5,
-  previewSourceLimit: 100,
+  postFetchBatch: 100,
+  postFetchMax: 5000,
 };
 
 const API_BASE = getApiBase();
@@ -17,6 +21,14 @@ const views = ['all-posts', 'add-new', 'edit-post', 'preview'];
 
 const tableBody = document.getElementById('postsTableBody');
 const previewList = document.getElementById('previewList');
+const postSearchInput = document.getElementById('postSearch');
+const tablePageSizeSelect = document.getElementById('tablePageSize');
+const postsPagination = document.getElementById('postsPagination');
+const postsMeta = document.getElementById('postsMeta');
+const previewPageSizeSelect = document.getElementById('previewPageSize');
+const previewPagination = document.getElementById('previewPagination');
+const previewMeta = document.getElementById('previewMeta');
+
 let postCache = [];
 
 function getApiBase() {
@@ -72,9 +84,13 @@ function showView(view) {
   });
   state.activeView = view;
 
-  if (view === 'all-posts') loadPosts();
+  if (view === 'all-posts') {
+    state.tableOffset = 0;
+    loadPosts();
+  }
+
   if (view === 'preview') {
-    state.previewOffset = 0;
+    state.previewPage = 1;
     loadPreview();
   }
 }
@@ -85,37 +101,146 @@ function escapeHtml(value) {
   return div.innerHTML;
 }
 
-async function fetchPostsForTable() {
-  const response = await request('/article/200/0');
-  postCache = Array.isArray(response) ? response : [];
+function getStatus(post) {
+  return String(post?.status || '').trim().toLowerCase();
+}
+
+function normalizePageValue(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return parsed;
+}
+
+async function fetchPosts() {
+  if (postCache.length > 0) {
+    return postCache;
+  }
+
+  let offset = 0;
+  const rows = [];
+
+  while (offset <= state.postFetchMax) {
+    const chunk = await request(`/article/${state.postFetchBatch}/${offset}`);
+    if (!Array.isArray(chunk) || chunk.length === 0) {
+      break;
+    }
+
+    rows.push(...chunk);
+    if (chunk.length < state.postFetchBatch) {
+      break;
+    }
+
+    offset += state.postFetchBatch;
+  }
+
+  postCache = rows;
   return postCache;
+}
+
+function getFilteredPosts() {
+  const query = (state.tableSearchQuery || '').trim().toLowerCase();
+  const byStatus = filterPostsByStatus(postCache, state.activeStatus);
+
+  if (!query) {
+    return byStatus;
+  }
+
+  return byStatus.filter((post) => {
+    const title = String(post?.title || '').toLowerCase();
+    const category = String(post?.category || '').toLowerCase();
+    return title.includes(query) || category.includes(query);
+  });
+}
+
+function buildPageNumbers(totalPages, currentPage) {
+  const visibleLimit = 7;
+
+  if (totalPages <= visibleLimit) {
+    return Array.from({ length: totalPages }, (_, idx) => idx + 1);
+  }
+
+  const pages = [];
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPages - 1, currentPage + 1);
+
+  pages.push(1);
+  if (start > 2) pages.push('...');
+  for (let idx = start; idx <= end; idx += 1) {
+    pages.push(idx);
+  }
+  if (end < totalPages - 1) pages.push('...');
+  pages.push(totalPages);
+
+  return pages;
+}
+
+function renderNumberedPagination(container, { currentPage, totalPages, onPageChange }) {
+  container.innerHTML = '';
+  if (totalPages < 2) {
+    return;
+  }
+
+  const pageNumbers = buildPageNumbers(totalPages, currentPage);
+  for (const item of pageNumbers) {
+    if (item === '...') {
+      const gap = document.createElement('span');
+      gap.className = 'pagination-ellipsis';
+      gap.textContent = '…';
+      container.appendChild(gap);
+      continue;
+    }
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'page-btn';
+    if (item === currentPage) btn.classList.add('is-current');
+    btn.textContent = String(item);
+    btn.disabled = item === currentPage;
+    btn.addEventListener('click', () => {
+      onPageChange(item);
+    });
+    container.appendChild(btn);
+  }
 }
 
 async function loadPosts() {
   try {
-    const posts = await fetchPostsForTable();
-    const rows = filterPostsByStatus(posts, state.activeStatus);
+    const posts = await fetchPosts();
+    const filteredRows = getFilteredPosts(posts);
+    const pageSize = state.tableLimit;
+    const totalRows = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+    state.tableOffset = Math.min(state.tableOffset, totalPages - 1);
+    if (state.tableOffset < 0) state.tableOffset = 0;
+
+    const start = state.tableOffset * pageSize;
+    const rows = filteredRows.slice(start, start + pageSize);
 
     tableBody.innerHTML = '';
     if (!rows.length) {
-      tableBody.innerHTML = '<tr><td colspan="3" class="muted">Tidak ada data.</td></tr>';
+      const stateName = state.activeStatus === 'publish' ? 'Publish' : state.activeStatus;
+      tableBody.innerHTML = `<tr><td colspan="3" class="muted">Tidak ada artikel ${stateName} yang cocok.</td></tr>`;
+      postsMeta.textContent = 'Tidak ada data';
+      postsPagination.innerHTML = '';
       return;
     }
 
     for (const post of rows) {
-      const status = String(post.status || '').toLowerCase();
-      const showUndo = status !== 'publish';
+      const status = getStatus(post);
       const actionButtons = [
         `<button class="action-btn" data-action="edit" data-id="${post.id}" title="Edit">✏️</button>`,
-        `<button class="action-btn trash" data-action="trash" data-id="${post.id}" title="Pindahkan ke Trashed">🗑️</button>`,
       ];
 
-      if (showUndo) {
-        actionButtons.push(`
-          <button class="action-btn undo" data-action="undo" data-id="${post.id}" title="Kembalikan ke Draft">
+      if (status !== 'thrash') {
+        actionButtons.push(
+          `<button class="action-btn trash" data-action="trash" data-id="${post.id}" title="Pindahkan ke Trashed">🗑️</button>`,
+        );
+      } else {
+        actionButtons.push(
+          `<button class="action-btn undo" data-action="undo" data-id="${post.id}" title="Kembalikan ke Draft">
             ↩️
-          </button>
-        `);
+          </button>`,
+        );
       }
 
       const tr = document.createElement('tr');
@@ -142,15 +267,35 @@ async function loadPosts() {
     tableBody.querySelectorAll('[data-action="undo"]').forEach((btn) => {
       btn.addEventListener('click', () => moveToDraft(btn.dataset.id));
     });
+
+    postsMeta.textContent = `Menampilkan ${start + 1}-${Math.min(start + pageSize, totalRows)} dari ${totalRows} artikel`;
+    renderNumberedPagination(postsPagination, {
+      currentPage: state.tableOffset + 1,
+      totalPages,
+      onPageChange: (page) => {
+        state.tableOffset = page - 1;
+        loadPosts();
+      },
+    });
   } catch (error) {
     notify(error.message);
     tableBody.innerHTML = '<tr><td colspan="3" class="muted">Gagal memuat data.</td></tr>';
+    postsMeta.textContent = 'Gagal memuat data';
+    postsPagination.innerHTML = '';
   }
 }
 
 async function openEdit(id) {
-  const post = postCache.find((item) => String(item.id) === String(id));
-  if (!post) return;
+  let post = postCache.find((item) => String(item.id) === String(id));
+  if (!post) {
+    const latestPosts = await fetchPosts();
+    post = latestPosts.find((item) => String(item.id) === String(id));
+  }
+
+  if (!post) {
+    notify('Data tidak ditemukan');
+    return;
+  }
 
   state.editId = id;
   document.getElementById('editId').value = post.id;
@@ -167,6 +312,11 @@ async function moveToTrash(id) {
     return;
   }
 
+  if (getStatus(post) === 'thrash') {
+    notify('Artikel sudah dalam Trashed');
+    return;
+  }
+
   try {
     await request(`/article/${id}`, {
       method: 'PUT',
@@ -177,6 +327,7 @@ async function moveToTrash(id) {
     });
 
     notify('Dipindahkan ke trash');
+    postCache = [];
     await loadPosts();
   } catch (error) {
     notify(error.message);
@@ -190,7 +341,7 @@ async function moveToDraft(id) {
     return;
   }
 
-  if ((post.status || '').toLowerCase() === 'draft') {
+  if (getStatus(post) === 'draft') {
     notify('Artikel sudah dalam draft');
     return;
   }
@@ -205,6 +356,7 @@ async function moveToDraft(id) {
     });
 
     notify('Status artikel dikembalikan ke Draft');
+    postCache = [];
     await loadPosts();
   } catch (error) {
     notify(error.message);
@@ -226,21 +378,16 @@ function clearEditCache() {
 }
 
 async function loadPreview() {
-  const prevBtn = document.getElementById('previewPrev');
-  const nextBtn = document.getElementById('previewNext');
-  const meta = document.getElementById('previewMeta');
-
   try {
     const posts = await collectPublishedPostsForPreview();
     const published = Array.isArray(posts) ? posts : [];
-    const pageStart = state.previewOffset;
-    const pageEnd = state.previewOffset + state.previewLimit;
-    const pageItems = published.slice(pageStart, pageEnd);
+    const totalPages = Math.max(1, Math.ceil(published.length / state.previewLimit));
+    state.previewPage = Math.min(state.previewPage, totalPages);
+    state.previewPage = Math.max(1, state.previewPage);
 
-    if (state.previewOffset > 0 && pageStart >= published.length) {
-      state.previewOffset = Math.max(0, (Math.floor((published.length - 1) / state.previewLimit) * state.previewLimit));
-      return loadPreview();
-    }
+    const pageStart = (state.previewPage - 1) * state.previewLimit;
+    const pageEnd = pageStart + state.previewLimit;
+    const pageItems = published.slice(pageStart, pageEnd);
 
     previewList.innerHTML = '';
     if (!pageItems.length) {
@@ -250,9 +397,8 @@ async function loadPreview() {
           <p>Gunakan tab <strong>Add New</strong> lalu klik <strong>Publish</strong> untuk menampilkan artikel di preview.</p>
         </div>
       `;
-      prevBtn.disabled = state.previewOffset === 0;
-      nextBtn.disabled = true;
-      meta.textContent = 'Preview kosong.';
+      previewMeta.textContent = 'Tidak ada data';
+      previewPagination.innerHTML = '';
       return;
     }
 
@@ -261,17 +407,21 @@ async function loadPreview() {
       article.className = 'preview-card';
       article.innerHTML = `
         <h3 class="preview-title">${escapeHtml(post.title)}</h3>
-        <p class="preview-cat">${escapeHtml(post.category)} • #${post.id}</p>
+        <p class="preview-cat">${escapeHtml(post.category)}</p>
         <p class="preview-content">${escapeHtml(post.content).slice(0, 250)}...</p>
       `;
       previewList.appendChild(article);
     }
 
-    prevBtn.disabled = state.previewOffset === 0;
-    nextBtn.disabled = pageEnd >= published.length;
-    const currentPage = Math.floor(state.previewOffset / state.previewLimit) + 1;
-    const totalPage = Math.max(1, Math.ceil(published.length / state.previewLimit));
-    meta.textContent = `Halaman ${currentPage} dari ${totalPage}`;
+    previewMeta.textContent = `Halaman ${state.previewPage} dari ${totalPages}`;
+    renderNumberedPagination(previewPagination, {
+      currentPage: state.previewPage,
+      totalPages,
+      onPageChange: (page) => {
+        state.previewPage = page;
+        loadPreview();
+      },
+    });
   } catch (error) {
     notify(error.message);
     previewList.innerHTML = '<div class="preview-card"><p class="muted">Gagal memuat preview.</p></div>';
@@ -279,24 +429,8 @@ async function loadPreview() {
 }
 
 async function collectPublishedPostsForPreview() {
-  let offset = 0;
-  let allPosts = [];
-
-  while (offset < 500) {
-    const rows = await request(`/article/${state.previewSourceLimit}/${offset}`);
-    if (!Array.isArray(rows) || rows.length === 0) {
-      break;
-    }
-
-    allPosts = allPosts.concat(filterPostsByStatus(rows, 'publish'));
-    if (rows.length < state.previewSourceLimit) {
-      break;
-    }
-
-    offset += state.previewSourceLimit;
-  }
-
-  return allPosts;
+  const allPosts = await fetchPosts();
+  return filterPostsByStatus(allPosts, 'publish');
 }
 
 document.querySelectorAll('.menu-btn').forEach((btn) => {
@@ -311,8 +445,27 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
     document.querySelectorAll('.tab-btn').forEach((tab) => tab.classList.remove('active'));
     btn.classList.add('active');
     state.activeStatus = btn.dataset.status;
+    state.tableOffset = 0;
     loadPosts();
   });
+});
+
+postSearchInput.addEventListener('input', () => {
+  state.tableSearchQuery = postSearchInput.value.trim().toLowerCase();
+  state.tableOffset = 0;
+  loadPosts();
+});
+
+tablePageSizeSelect.addEventListener('change', () => {
+  state.tableLimit = normalizePageValue(tablePageSizeSelect.value, state.tableLimit);
+  state.tableOffset = 0;
+  loadPosts();
+});
+
+previewPageSizeSelect.addEventListener('change', () => {
+  state.previewLimit = normalizePageValue(previewPageSizeSelect.value, state.previewLimit);
+  state.previewPage = 1;
+  loadPreview();
 });
 
 // Add new
@@ -329,7 +482,9 @@ document.querySelectorAll('[data-save-as]').forEach((btn) => {
       await savePost('/article/', payload);
       notify('Artikel ditambahkan');
       document.getElementById('addForm').reset();
+      postCache = [];
       state.activeStatus = 'publish';
+      state.tableOffset = 0;
       setActiveMenu('all-posts');
       showView('all-posts');
       loadPosts();
@@ -343,6 +498,7 @@ document.querySelectorAll('[data-save-as]').forEach((btn) => {
 document.querySelector('[data-save-edit-as="publish"]').addEventListener('click', async () => {
   await saveEdit('publish');
 });
+
 document.querySelector('[data-save-edit-as="draft"]').addEventListener('click', async () => {
   await saveEdit('draft');
 });
@@ -370,6 +526,7 @@ async function saveEdit(status) {
 
     notify('Artikel berhasil diperbarui');
     clearEditCache();
+    postCache = [];
     setActiveMenu('all-posts');
     showView('all-posts');
     await loadPosts();
@@ -377,18 +534,5 @@ async function saveEdit(status) {
     notify(error.message);
   }
 }
-
-// Preview pagination
-document.getElementById('previewPrev').addEventListener('click', () => {
-  if (state.previewOffset > 0) {
-    state.previewOffset = Math.max(0, state.previewOffset - state.previewLimit);
-    loadPreview();
-  }
-});
-
-document.getElementById('previewNext').addEventListener('click', () => {
-  state.previewOffset += state.previewLimit;
-  loadPreview();
-});
 
 showView('all-posts');

@@ -63,7 +63,9 @@ export function resolveApiBase({ host, search, windowBase, metaBase }) {
 }
 
 export function filterPostsByStatus(posts, status) {
-  return (posts || []).filter((post) => post.status === status);
+  return (posts || []).filter(
+    (post) => String(post.status || '').toLowerCase() === String(status || '').toLowerCase(),
+  );
 }
 
 export function buildPublishedMeta(post) {

@@ -30,6 +30,29 @@
             <button class="tab-btn" data-status="thrash">Trashed</button>
           </div>
 
+          <div class="list-toolbar">
+            <label class="search-field">
+              <span class="search-label">Search</span>
+              <input
+                id="postSearch"
+                type="search"
+                placeholder="Cari title atau category..."
+                autocomplete="off"
+              />
+            </label>
+
+            <label class="page-size-field">
+              <span class="search-label">Tampilkan</span>
+              <select id="tablePageSize">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+          </div>
+
           <div class="table-wrap">
             <table>
               <thead>
@@ -46,6 +69,9 @@
               </tbody>
             </table>
           </div>
+
+          <div id="postsPagination" class="pagination-controls pager"></div>
+          <div id="postsMeta" class="pagination-meta">Menampilkan data</div>
         </section>
 
         <section id="add-new" class="panel">
@@ -137,11 +163,21 @@
             <h2>Preview (Publish only)</h2>
           </div>
           <div class="preview-list" id="previewList"></div>
-          <div class="button-row pagination-controls">
-            <button id="previewPrev" class="btn ghost">Previous</button>
-            <button id="previewNext" class="btn ghost">Next</button>
+
+          <div class="list-toolbar preview-toolbar">
+            <label class="page-size-field">
+              <span class="search-label">Per Halaman</span>
+              <select id="previewPageSize">
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+              </select>
+            </label>
           </div>
-          <div class="pagination-meta" id="previewMeta">Halaman 1</div>
+
+          <div id="previewPagination" class="pagination-controls pager"></div>
+          <div class="pagination-meta" id="previewMeta">Halaman 1 dari 1</div>
         </section>
       </main>
     </div>
