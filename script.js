@@ -205,8 +205,8 @@ function renderNumberedPagination(container, { currentPage, totalPages, onPageCh
 
 async function loadPosts() {
   try {
-    const posts = await fetchPosts();
-    const filteredRows = getFilteredPosts(posts);
+    await fetchPosts();
+    const filteredRows = getFilteredPosts();
     const pageSize = state.tableLimit;
     const totalRows = filteredRows.length;
     const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
