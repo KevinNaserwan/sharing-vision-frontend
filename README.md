@@ -20,6 +20,7 @@ Dashboard CRUD artikel untuk use case **Post Article**.
   - Menampilkan artikel dengan status `publish`
   - Pagination numerik di atas dan di bawah daftar publish
   - Kontrol jumlah card per halaman
+  - Klik "Baca selengkapnya" untuk membuka halaman artikel penuh (tanpa modal)
   - Tidak menampilkan id artikel pada kartu list
 
 ## Konfigurasi API

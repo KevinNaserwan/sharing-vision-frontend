@@ -201,13 +201,6 @@ function formatPreviewDate(value) {
   });
 }
 
-function buildExcerpt(content, length = 240) {
-  const text = normalizeText(content);
-  if (!text) return '';
-  if (text.length <= length) return text;
-  return `${text.slice(0, length).trim()}…`;
-}
-
 function getStatus(post) {
   return String(post?.status || '').trim().toLowerCase();
 }
@@ -712,7 +705,7 @@ async function loadPreview() {
       const category = normalizeText(post.category);
       const title = normalizeText(post.title);
       const dateText = formatPreviewDate(post.updated_date || post.created_date);
-      const excerpt = buildExcerpt(post.content, 220);
+      const excerpt = normalizeText(post.content) || 'Tidak ada konten artikel.';
       const readTime = Math.max(1, Math.round((normalizeText(post.content || '').split(' ').filter(Boolean).length || 0) / 140));
 
       const visualText = title ? title.slice(0, 2).toUpperCase() : 'AR';

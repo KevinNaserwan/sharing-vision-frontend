@@ -363,10 +363,9 @@ textarea {
   color: #1f2a3d;
   font-size: 14px;
   line-height: 1.55;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .preview-article-header {
