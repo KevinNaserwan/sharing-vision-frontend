@@ -34,26 +34,35 @@ python -m http.server 5173
 
 ## Konfigurasi API Endpoint
 
-Default API base di file HTML: 
-- `<meta name="api-base" content="http://localhost:8000">`
+Aplikasi membaca API base dari salah satu urutan:
+1. `<meta name="api-base" content="...">` pada `index.html`
+2. Query string `?api=https://domain-backend.com`
+3. Fallback `http://localhost:8000`
 
-Untuk environment lain (mis. deployment), gunakan salah satu cara:
-
-1. Ubah nilai meta `api-base` di `index.html`.
-2. Akses dengan query param:
+Contoh:
 
 ```text
-https://<vercel-domain>.vercel.app/?api=https://your-backend-domain/api
+https://nama-project.vercel.app/?api=https://your-backend-domain.com
 ```
-3. Atau set global JS variable sebelum load script.
 
 ## Deploy Frontend ke Vercel (Gratis)
 
-1. Buat repo frontend di GitHub (sudah disiapkan).
-2. Buka https://vercel.com/import dan import repo `sharing-vision-frontend`.
-3. Pilih **Framework Preset**: **Other**.
-4. Build Command: **kosong** (karena static HTML).
-5. Output Directory: `.`
-6. Deploy.
-7. Jika backend beda domain, edit `index.html` `meta api-base` atau gunakan URL `?api=...`.
+Langkah cepat:
 
+1. Pastikan project sudah di GitHub.
+2. Buka [vercel.com/import](https://vercel.com/import).
+3. Import repo `sharing-vision-frontend`.
+4. Framework preset: **Other**.
+5. Build Command: (kosong), Output Directory: `.`.
+6. Deploy.
+
+Opsional: gunakan Vercel CLI:
+
+```bash
+cd sharing-vision-frontend
+vercel
+```
+
+## Repo
+
+- Frontend: https://github.com/KevinNaserwan/sharing-vision-frontend
