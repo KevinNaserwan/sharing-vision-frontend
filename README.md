@@ -51,6 +51,30 @@ Opsional untuk API lokal:
 Domain production saat ini:
 - `https://sharing-vision-frontend-two.vercel.app`
 
+## Testing
+
+### Unit Test Frontend (pure utility)
+
+```bash
+cd sharing-vision-frontend
+npm test
+```
+
+### Real Test (Dashboard Workflow)
+
+1) Buka halaman: `https://sharing-vision-frontend-two.vercel.app/?api=https://be-sharing-vision.meetsin.id:8000`
+2) All Posts → verifikasi tab `Published`, `Drafts`, `Trashed`
+3) Add New → isi title/content/category, klik Publish/Draft
+4) Klik Edit pada row → edit title/content/category, update status via Publish/Draft
+5) Klik Trash icon → status berpindah ke tab Trashed
+6) Preview → pastikan hanya menampilkan status `Publish` dan `Previous/Next` aktif berdasarkan data
+
+### Command untuk smoke test endpoint API (melalui FE proxy)
+
+```bash
+curl -sS https://sharing-vision-frontend-two.vercel.app/api/article/10/0
+```
+
 ## Daftar Pemeriksaan Manual (Runtime)
 
 - Navigasi menu:

@@ -1,3 +1,8 @@
+import {
+  filterPostsByStatus,
+  resolveApiBase,
+} from './app-core.js';
+
 const state = {
   activeView: 'all-posts',
   activeStatus: 'publish',
@@ -14,76 +19,12 @@ const previewList = document.getElementById('previewList');
 let postCache = [];
 
 function getApiBase() {
-  const host = window.location.hostname;
-  const isVercel = host.endsWith('.vercel.app');
-  const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
-
-  const q = new URLSearchParams(window.location.search).get('api');
-  if (q && q.trim()) {
-    return finalizeApiBase(q.trim(), isVercel, isLocal);
-  }
-
-  const fromWindow = window.__SHARING_VISION_API_BASE__?.toString().trim();
-  if (fromWindow) {
-    return finalizeApiBase(fromWindow, isVercel, isLocal);
-  }
-
-  const meta = document.querySelector('meta[name="api-base"]')?.content?.trim();
-  if (meta) {
-    return finalizeApiBase(meta, isVercel, isLocal);
-  }
-
-  if (window.location.hostname.endsWith('.vercel.app')) {
-    return '/api';
-  }
-
-  if (isLocal) {
-    return 'http://127.0.0.1:8000';
-  }
-
-  return 'https://be-sharing-vision.meetsin.id';
-}
-
-function finalizeApiBase(candidate, isVercel, isLocal) {
-  const normalized = normalizeApiBase(candidate);
-
-  if (!normalized) {
-    return isLocal ? 'http://127.0.0.1:8000' : 'https://be-sharing-vision.meetsin.id';
-  }
-
-  if (normalized === '/api') {
-    return isVercel ? '/api' : (isLocal ? 'http://127.0.0.1:8000' : normalized);
-  }
-
-  if (isVercel && isBackendDomainHost(normalized)) {
-    return '/api';
-  }
-
-  return normalized;
-}
-
-function isBackendDomainHost(base) {
-  const stripped = base
-    .replace(/^https?:\/\//, '')
-    .replace(/\/+$/, '')
-    .toLowerCase();
-  return (
-    stripped.startsWith('be-sharing-vision.meetsin.id') ||
-    stripped.startsWith('127.0.0.1:8000')
-  );
-}
-
-function normalizeApiBase(base) {
-  const value = String(base || '').trim();
-  if (!value) {
-    return value;
-  }
-
-  if (value.startsWith('/')) {
-    return value.replace(/\/+$/, '');
-  }
-
-  return value.replace(/\/+$/, '');
+  return resolveApiBase({
+    host: window.location.hostname,
+    search: window.location.search,
+    windowBase: window.__SHARING_VISION_API_BASE__?.toString(),
+    metaBase: document.querySelector('meta[name="api-base"]')?.content,
+  });
 }
 
 async function request(path, options = {}) {
@@ -149,7 +90,7 @@ async function fetchPostsForTable() {
 async function loadPosts() {
   try {
     const posts = await fetchPostsForTable();
-    const rows = posts.filter((post) => post.status === state.activeStatus);
+    const rows = filterPostsByStatus(posts, state.activeStatus);
 
     tableBody.innerHTML = '';
     if (!rows.length) {
@@ -237,7 +178,7 @@ function clearEditCache() {
 async function loadPreview() {
   try {
     const posts = await request(`/article/${state.previewLimit}/${state.previewOffset}`);
-    const published = Array.isArray(posts) ? posts.filter((p) => p.status === 'publish') : [];
+    const published = filterPostsByStatus(posts, 'publish');
 
     previewList.innerHTML = '';
     if (!published.length) {
