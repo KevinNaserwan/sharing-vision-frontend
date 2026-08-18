@@ -23,10 +23,10 @@ Frontend mengambil base URL API dari urutan prioritas berikut:
 1. Query string: `?api=...`
 2. Meta tag: `<meta name="api-base" ...>`
 3. Fallback default:
-   - `/api` saat FE dijalankan dari Vercel (melalui rewrite internal)
-   - `https://be-sharing-vision.meetsin.id` untuk environment lain
+  - `/api` saat FE dijalankan dari Vercel (melalui rewrite internal)
+  - `http://be-sharing-vision.meetsin.id:8000` untuk environment lain
 
-> Catatan: pada Vercel, endpoint diproxy lewat route `/api/*` ke backend di
+> Catatan: pada Vercel, endpoint diproxy lewat route `/api/*` ke
 > `be-sharing-vision.meetsin.id:8000`.
 
 ## Menjalankan Secara Lokal
