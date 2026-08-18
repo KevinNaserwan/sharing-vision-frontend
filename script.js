@@ -105,6 +105,28 @@ function escapeHtml(value) {
   return div.innerHTML;
 }
 
+function normalizeText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function formatPreviewDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function buildExcerpt(content, length = 240) {
+  const text = normalizeText(content);
+  if (!text) return '';
+  if (text.length <= length) return text;
+  return `${text.slice(0, length).trim()}…`;
+}
+
 function getStatus(post) {
   return String(post?.status || '').trim().toLowerCase();
 }
@@ -454,10 +476,12 @@ async function loadPreview() {
     previewList.innerHTML = '';
     if (!pageItems.length) {
       previewList.innerHTML = `
-        <div class="preview-card">
-          <p class="muted">Tidak ada artikel publish.</p>
-          <p>Gunakan tab <strong>Add New</strong> lalu klik <strong>Publish</strong> untuk menampilkan artikel di preview.</p>
-        </div>
+        <article class="preview-article is-empty">
+          <h3 class="preview-title">Belum ada artikel publish</h3>
+          <p class="preview-meta">
+            Gunakan tab <strong>Add New</strong> lalu klik <strong>Publish</strong> untuk menampilkan artikel di preview.
+          </p>
+        </article>
       `;
       const emptyText = 'Tidak ada data';
       renderPaginationPair({
@@ -476,11 +500,21 @@ async function loadPreview() {
 
     for (const post of pageItems) {
       const article = document.createElement('article');
-      article.className = 'preview-card';
+      article.className = 'preview-article';
+      const category = normalizeText(post.category);
+      const dateText = formatPreviewDate(post.updated_date || post.created_date);
+      const excerpt = buildExcerpt(post.content, 220);
+
       article.innerHTML = `
-        <h3 class="preview-title">${escapeHtml(post.title)}</h3>
-        <p class="preview-cat">${escapeHtml(post.category)}</p>
-        <p class="preview-content">${escapeHtml(post.content).slice(0, 250)}...</p>
+        <div class="preview-article-header">
+          <h3 class="preview-title">${escapeHtml(post.title)}</h3>
+          <span class="preview-status">Publish</span>
+        </div>
+        <div class="preview-meta">
+          ${dateText ? `<span>${escapeHtml(dateText)}</span>` : ''}
+          ${category ? `<span class="meta-sep"></span><span class="preview-cat">${escapeHtml(category)}</span>` : ''}
+        </div>
+        <p class="preview-excerpt">${escapeHtml(excerpt || 'Tidak ada konten artikel.')}</p>
       `;
       previewList.appendChild(article);
     }
@@ -504,7 +538,7 @@ async function loadPreview() {
     previewMetaTop.textContent = previewMetaText;
   } catch (error) {
     notify(error.message);
-    previewList.innerHTML = '<div class="preview-card"><p class="muted">Gagal memuat preview.</p></div>';
+    previewList.innerHTML = '<article class="preview-article is-empty"><p class="preview-title">Gagal memuat preview.</p><p class="preview-meta">Cek koneksi ke endpoint lalu coba lagi.</p></article>';
     const failedText = 'Gagal memuat preview.';
     renderPaginationPair({
       top: previewPaginationTop,
