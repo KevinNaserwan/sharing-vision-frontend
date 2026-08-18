@@ -6,7 +6,7 @@ Dashboard CRUD artikel untuk use case **Post Article**.
 - **All Posts**
   - Tabs: `Published`, `Drafts`, `Trashed`
   - Tabel `title`, `category`, `action`
-  - Action berisi `Edit` dan `Thrashed`
+  - Action berisi `Edit` dan `Trashed`
 - **Edit Article**
   - Mengubah `title`, `content`, `category`
   - Tombol aksi `Publish` dan `Draft`
