@@ -14,26 +14,63 @@ const previewList = document.getElementById('previewList');
 let postCache = [];
 
 function getApiBase() {
+  const host = window.location.hostname;
+  const isVercel = host.endsWith('.vercel.app');
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
+
   const q = new URLSearchParams(window.location.search).get('api');
   if (q && q.trim()) {
-    return normalizeApiBase(q.trim());
+    return finalizeApiBase(q.trim(), isVercel, isLocal);
   }
 
   const fromWindow = window.__SHARING_VISION_API_BASE__?.toString().trim();
   if (fromWindow) {
-    return normalizeApiBase(fromWindow);
+    return finalizeApiBase(fromWindow, isVercel, isLocal);
   }
 
   const meta = document.querySelector('meta[name="api-base"]')?.content?.trim();
   if (meta) {
-    return normalizeApiBase(meta);
+    return finalizeApiBase(meta, isVercel, isLocal);
   }
 
   if (window.location.hostname.endsWith('.vercel.app')) {
     return '/api';
   }
 
+  if (isLocal) {
+    return 'http://127.0.0.1:8000';
+  }
+
   return 'https://be-sharing-vision.meetsin.id';
+}
+
+function finalizeApiBase(candidate, isVercel, isLocal) {
+  const normalized = normalizeApiBase(candidate);
+
+  if (!normalized) {
+    return isLocal ? 'http://127.0.0.1:8000' : 'https://be-sharing-vision.meetsin.id';
+  }
+
+  if (normalized === '/api') {
+    return isVercel ? '/api' : (isLocal ? 'http://127.0.0.1:8000' : normalized);
+  }
+
+  if (isVercel && isBackendDomainHost(normalized)) {
+    return '/api';
+  }
+
+  return normalized;
+}
+
+function isBackendDomainHost(base) {
+  const stripped = base
+    .replace(/^https?:\/\//, '')
+    .replace(/\/+$/, '')
+    .toLowerCase();
+  return (
+    stripped.startsWith('be-sharing-vision.meetsin.id') ||
+    stripped.startsWith('127.0.0.1:8000')
+  );
 }
 
 function normalizeApiBase(base) {
