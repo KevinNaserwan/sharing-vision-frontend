@@ -501,19 +501,31 @@ textarea {
 
 .page-btn.page-nav {
   min-width: 92px;
+  font-weight: 700;
+}
+
+.page-btn.page-nav:not(:disabled) {
+  background: #f0f5ff;
 }
 
 .article-page {
   max-width: 920px;
   margin: 6px auto 0;
-  min-height: calc(100vh - 248px);
+  min-height: auto;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto auto 1fr;
   gap: 12px;
 }
 
 #article-view {
-  min-height: calc(100vh - 248px);
+  min-height: clamp(58vh, calc(100vh - 160px), 88vh);
+  display: grid;
+  overflow: visible;
+}
+
+#article-view.panel {
+  min-height: clamp(58vh, calc(100vh - 160px), 88vh);
+  padding-bottom: 16px;
 }
 
 .article-meta {
@@ -550,10 +562,15 @@ textarea {
   line-height: 1.75;
   font-size: 16px;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   word-break: break-word;
   border-top: 1px solid var(--line);
   padding-top: 14px;
-  overflow-wrap: anywhere;
+  padding-bottom: 24px;
+}
+
+.article-content p {
+  margin: 0 0 12px;
 }
 
 .article-content + .article-content {
