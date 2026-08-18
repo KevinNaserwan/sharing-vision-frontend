@@ -32,6 +32,11 @@ const previewPaginationTop = document.getElementById('previewPaginationTop');
 const previewPagination = document.getElementById('previewPagination');
 const previewMetaTop = document.getElementById('previewMetaTop');
 const previewMeta = document.getElementById('previewMeta');
+const previewModal = document.getElementById('previewModal');
+const previewModalTitle = document.getElementById('previewModalTitle');
+const previewModalMeta = document.getElementById('previewModalMeta');
+const previewModalBody = document.getElementById('previewModalBody');
+const previewModalClose = document.getElementById('previewModalClose');
 
 let postCache = [];
 
@@ -276,6 +281,69 @@ function renderNavButton({ label, page, onPageChange, disabled }) {
     onPageChange(page);
   });
   return btn;
+}
+
+function resolvePublishedById(id) {
+  const post = postCache.find((item) => String(item.id) === String(id));
+  if (post) return post;
+  return null;
+}
+
+function showPreviewModal(post) {
+  if (!post || !previewModal || !previewModalTitle || !previewModalMeta || !previewModalBody) {
+    return;
+  }
+
+  const category = normalizeText(post.category);
+  const dateText = formatPreviewDate(post.updated_date || post.created_date);
+  const title = normalizeText(post.title);
+
+  previewModalTitle.textContent = title || 'Artikel';
+
+  previewModalMeta.innerHTML = '';
+  if (dateText) {
+    const publishedAt = document.createElement('span');
+    publishedAt.textContent = dateText;
+    previewModalMeta.appendChild(publishedAt);
+  }
+  if (category) {
+    const sep = document.createElement('span');
+    sep.className = 'meta-sep';
+    previewModalMeta.appendChild(sep);
+
+    const cat = document.createElement('span');
+    cat.className = 'preview-cat';
+    cat.textContent = category;
+    previewModalMeta.appendChild(cat);
+  }
+
+  previewModalBody.textContent = normalizeText(post.content) || 'Tidak ada konten artikel.';
+
+  if (typeof previewModal.showModal === 'function') {
+    previewModal.showModal();
+    previewModal.classList.add('is-open');
+    return;
+  }
+
+  previewModal.classList.add('fallback-open');
+  previewModal.setAttribute('open', 'open');
+}
+
+async function openReadMore(articleId) {
+  const cached = resolvePublishedById(articleId);
+  if (cached) {
+    showPreviewModal(cached);
+    return;
+  }
+
+  try {
+    const fetched = await request(`/article/${articleId}`);
+    if (fetched) {
+      showPreviewModal(fetched);
+    }
+  } catch {
+    notify('Gagal memuat artikel untuk dibaca selengkapnya');
+  }
 }
 
 function renderPaginationPair({
@@ -585,12 +653,26 @@ async function loadPreview() {
           </div>
           <p class="preview-excerpt">${escapeHtml(excerpt || 'Tidak ada konten artikel.')}</p>
           <div class="preview-footer">
-            <a href="#" class="preview-read-link" aria-label="Baca ${escapeHtml(title)}">Baca selengkapnya →</a>
+            <a
+              href="#"
+              class="preview-read-link"
+              data-preview-read-id="${escapeHtml(String(post.id))}"
+              aria-label="Baca ${escapeHtml(title)}"
+            >
+              Baca selengkapnya →
+            </a>
           </div>
         </div>
       `;
       previewList.appendChild(article);
     }
+
+    previewList.querySelectorAll('[data-preview-read-id]').forEach((el) => {
+      el.addEventListener('click', (event) => {
+        event.preventDefault();
+        openReadMore(el.dataset.previewReadId);
+      });
+    });
 
     const previewMetaText = `Halaman ${state.previewPage} dari ${totalPages}`;
     renderPaginationPair({
@@ -625,6 +707,33 @@ async function loadPreview() {
       onPageChange: () => undefined,
     });
   }
+}
+
+function closePreviewModal() {
+  if (!previewModal) {
+    return;
+  }
+
+  if (typeof previewModal.close === 'function') {
+    previewModal.close();
+  }
+  previewModal.removeAttribute('open');
+  previewModal.classList.remove('is-open');
+  previewModal.classList.remove('fallback-open');
+}
+
+if (previewModalClose) {
+  previewModalClose.addEventListener('click', () => {
+    closePreviewModal();
+  });
+}
+
+if (previewModal) {
+  previewModal.addEventListener('click', (event) => {
+    if (event.target === previewModal) {
+      closePreviewModal();
+    }
+  });
 }
 
 async function collectPublishedPostsForPreview() {

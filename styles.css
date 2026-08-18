@@ -412,10 +412,12 @@ textarea {
   align-items: center;
   gap: 6px;
   margin-top: 9px;
+  cursor: pointer;
 }
 
 .preview-read-link:hover {
   color: #162db8;
+  text-decoration: underline;
 }
 
 .preview-meta {
@@ -470,6 +472,8 @@ textarea {
   background: #f8fbff;
   color: #273b8a;
   padding: 8px 10px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
 .page-btn.is-current,
@@ -480,8 +484,75 @@ textarea {
   font-weight: 700;
 }
 
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.25);
+}
+
+.page-btn:not(:disabled):hover {
+  background: #e8eeff;
+  border-color: #b2c3ff;
+}
+
+.page-btn:not(:disabled):active {
+  transform: translateY(1px);
+}
+
 .page-btn.page-nav {
   min-width: 92px;
+}
+
+.preview-modal {
+  border: 0;
+  padding: 0;
+  width: min(840px, 94vw);
+}
+
+.preview-modal::backdrop {
+  background: rgba(8, 15, 24, 0.55);
+}
+
+.preview-modal.is-open {
+  border: 1px solid var(--line);
+}
+
+.preview-modal-panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  position: relative;
+}
+
+.preview-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f9fbff;
+  color: #334155;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.preview-modal h3 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.preview-modal-body {
+  color: #1f2a3d;
+  white-space: pre-wrap;
+  margin-top: 10px;
+  line-height: 1.6;
 }
 
 .pagination-ellipsis {
