@@ -183,19 +183,23 @@
           <div id="previewPagination" class="pagination-controls pager"></div>
           <div class="pagination-meta" id="previewMeta">Halaman 1 dari 1</div>
         </section>
+
+        <section id="article-view" class="panel">
+          <div class="panel-header">
+            <h2>Article</h2>
+            <button type="button" class="btn ghost" id="backFromPreview">Back to Preview</button>
+          </div>
+          <article class="article-page">
+            <div id="articleMeta" class="article-meta"></div>
+            <h1 id="articleTitle"></h1>
+            <div id="articleCategory" class="article-category"></div>
+            <div id="articleContent" class="article-content"></div>
+          </article>
+        </section>
       </main>
     </div>
 
     <div id="toast" class="toast"></div>
-
-    <dialog id="previewModal" class="preview-modal">
-      <div class="preview-modal-panel">
-        <button type="button" id="previewModalClose" class="preview-modal-close" aria-label="Tutup">✕</button>
-        <h3 id="previewModalTitle"></h3>
-        <div id="previewModalMeta" class="preview-meta"></div>
-        <article id="previewModalBody" class="preview-modal-body"></article>
-      </div>
-    </dialog>
 
     <script src="script.js" type="module"></script>
   </body>

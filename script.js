@@ -17,7 +17,7 @@ const state = {
 };
 
 const API_BASE = getApiBase();
-const views = ['all-posts', 'add-new', 'edit-post', 'preview'];
+const views = ['all-posts', 'add-new', 'edit-post', 'preview', 'article-view'];
 
 const tableBody = document.getElementById('postsTableBody');
 const previewList = document.getElementById('previewList');
@@ -32,11 +32,12 @@ const previewPaginationTop = document.getElementById('previewPaginationTop');
 const previewPagination = document.getElementById('previewPagination');
 const previewMetaTop = document.getElementById('previewMetaTop');
 const previewMeta = document.getElementById('previewMeta');
-const previewModal = document.getElementById('previewModal');
-const previewModalTitle = document.getElementById('previewModalTitle');
-const previewModalMeta = document.getElementById('previewModalMeta');
-const previewModalBody = document.getElementById('previewModalBody');
-const previewModalClose = document.getElementById('previewModalClose');
+const articleView = document.getElementById('article-view');
+const articleTitle = document.getElementById('articleTitle');
+const articleMeta = document.getElementById('articleMeta');
+const articleCategory = document.getElementById('articleCategory');
+const articleContent = document.getElementById('articleContent');
+const backFromPreview = document.getElementById('backFromPreview');
 
 let postCache = [];
 
@@ -289,57 +290,46 @@ function resolvePublishedById(id) {
   return null;
 }
 
-function showPreviewModal(post) {
-  if (!post || !previewModal || !previewModalTitle || !previewModalMeta || !previewModalBody) {
-    return;
-  }
-
-  const category = normalizeText(post.category);
-  const dateText = formatPreviewDate(post.updated_date || post.created_date);
-  const title = normalizeText(post.title);
-
-  previewModalTitle.textContent = title || 'Artikel';
-
-  previewModalMeta.innerHTML = '';
-  if (dateText) {
-    const publishedAt = document.createElement('span');
-    publishedAt.textContent = dateText;
-    previewModalMeta.appendChild(publishedAt);
-  }
-  if (category) {
-    const sep = document.createElement('span');
-    sep.className = 'meta-sep';
-    previewModalMeta.appendChild(sep);
-
-    const cat = document.createElement('span');
-    cat.className = 'preview-cat';
-    cat.textContent = category;
-    previewModalMeta.appendChild(cat);
-  }
-
-  previewModalBody.textContent = normalizeText(post.content) || 'Tidak ada konten artikel.';
-
-  if (typeof previewModal.showModal === 'function') {
-    previewModal.showModal();
-    previewModal.classList.add('is-open');
-    return;
-  }
-
-  previewModal.classList.add('fallback-open');
-  previewModal.setAttribute('open', 'open');
+function formatArticleDate(dateValue) {
+  return formatPreviewDate(dateValue);
 }
 
-async function openReadMore(articleId) {
+function renderArticlePage(post) {
+  if (!articleView || !articleTitle || !articleMeta || !articleCategory || !articleContent || !post) {
+    return;
+  }
+
+  const title = normalizeText(post.title);
+  const category = normalizeText(post.category);
+  const dateText = formatArticleDate(post.updated_date || post.created_date);
+  const content = String(post.content || '').trim();
+
+  articleTitle.textContent = title || 'Artikel';
+  articleCategory.textContent = category ? `Kategori: ${category}` : '';
+
+  articleMeta.innerHTML = '';
+  if (dateText) {
+    const publishedDate = document.createElement('span');
+    publishedDate.textContent = dateText;
+    articleMeta.appendChild(publishedDate);
+  }
+
+  articleContent.textContent = content || 'Tidak ada konten artikel.';
+  showView('article-view');
+  setActiveMenu('preview');
+}
+
+async function openArticlePage(articleId) {
   const cached = resolvePublishedById(articleId);
   if (cached) {
-    showPreviewModal(cached);
+    renderArticlePage(cached);
     return;
   }
 
   try {
     const fetched = await request(`/article/${articleId}`);
     if (fetched) {
-      showPreviewModal(fetched);
+      renderArticlePage(fetched);
     }
   } catch {
     notify('Gagal memuat artikel untuk dibaca selengkapnya');
@@ -372,7 +362,7 @@ function renderPaginationPair({
       currentPage,
       totalPages,
       onPageChange,
-      showFirstLast: totalPages > 1,
+      showFirstLast: true,
     });
   }
   if (bottom) {
@@ -380,7 +370,7 @@ function renderPaginationPair({
       currentPage,
       totalPages,
       onPageChange,
-      showFirstLast: totalPages > 1,
+      showFirstLast: true,
     });
   }
 }
@@ -652,7 +642,7 @@ async function loadPreview() {
             <span>${readTime} min read</span>
           </div>
           <p class="preview-excerpt">${escapeHtml(excerpt || 'Tidak ada konten artikel.')}</p>
-          <div class="preview-footer">
+    <div class="preview-footer">
             <a
               href="#"
               class="preview-read-link"
@@ -670,7 +660,7 @@ async function loadPreview() {
     previewList.querySelectorAll('[data-preview-read-id]').forEach((el) => {
       el.addEventListener('click', (event) => {
         event.preventDefault();
-        openReadMore(el.dataset.previewReadId);
+        openArticlePage(el.dataset.previewReadId);
       });
     });
 
@@ -707,33 +697,6 @@ async function loadPreview() {
       onPageChange: () => undefined,
     });
   }
-}
-
-function closePreviewModal() {
-  if (!previewModal) {
-    return;
-  }
-
-  if (typeof previewModal.close === 'function') {
-    previewModal.close();
-  }
-  previewModal.removeAttribute('open');
-  previewModal.classList.remove('is-open');
-  previewModal.classList.remove('fallback-open');
-}
-
-if (previewModalClose) {
-  previewModalClose.addEventListener('click', () => {
-    closePreviewModal();
-  });
-}
-
-if (previewModal) {
-  previewModal.addEventListener('click', (event) => {
-    if (event.target === previewModal) {
-      closePreviewModal();
-    }
-  });
 }
 
 async function collectPublishedPostsForPreview() {
@@ -816,6 +779,13 @@ document.getElementById('backFromEdit').addEventListener('click', () => {
   showView('all-posts');
   setActiveMenu('all-posts');
 });
+
+if (backFromPreview) {
+  backFromPreview.addEventListener('click', () => {
+    showView('preview');
+    setActiveMenu('preview');
+  });
+}
 
 async function saveEdit(status) {
   const id = document.getElementById('editId').value;
