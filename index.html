@@ -53,15 +53,33 @@
           <form id="addForm" class="post-form">
             <label>
               Title
-              <input id="addTitle" type="text" maxlength="200" required />
+              <input
+                id="addTitle"
+                type="text"
+                maxlength="200"
+                required
+                placeholder="Contoh: Belajar Dasar Microservices dengan Go dan MySQL"
+              />
             </label>
             <label>
               Content
-              <textarea id="addContent" rows="8" minlength="200" required></textarea>
+              <textarea
+                id="addContent"
+                rows="8"
+                minlength="200"
+                required
+                placeholder="Tuliskan konten artikel minimal 200 karakter..."
+              ></textarea>
             </label>
             <label>
               Category
-              <input id="addCategory" type="text" maxlength="100" required />
+              <input
+                id="addCategory"
+                type="text"
+                maxlength="100"
+                required
+                placeholder="Misal: Technology, Tutorial, News"
+              />
             </label>
             <div class="button-row">
               <button type="button" class="btn primary" data-save-as="publish">Publish</button>
@@ -79,15 +97,33 @@
             <input type="hidden" id="editId" />
             <label>
               Title
-              <input id="editTitle" type="text" maxlength="200" required />
+              <input
+                id="editTitle"
+                type="text"
+                maxlength="200"
+                required
+                placeholder="Edit judul artikel"
+              />
             </label>
             <label>
               Content
-              <textarea id="editContent" rows="8" minlength="200" required></textarea>
+              <textarea
+                id="editContent"
+                rows="8"
+                minlength="200"
+                required
+                placeholder="Edit isi artikel"
+              ></textarea>
             </label>
             <label>
               Category
-              <input id="editCategory" type="text" maxlength="100" required />
+              <input
+                id="editCategory"
+                type="text"
+                maxlength="100"
+                required
+                placeholder="Edit kategori artikel"
+              />
             </label>
             <div class="button-row">
               <button type="button" class="btn primary" data-save-edit-as="publish">Publish</button>
@@ -101,10 +137,11 @@
             <h2>Preview (Publish only)</h2>
           </div>
           <div class="preview-list" id="previewList"></div>
-          <div class="button-row">
+          <div class="button-row pagination-controls">
             <button id="previewPrev" class="btn ghost">Previous</button>
             <button id="previewNext" class="btn ghost">Next</button>
           </div>
+          <div class="pagination-meta" id="previewMeta">Halaman 1</div>
         </section>
       </main>
     </div>

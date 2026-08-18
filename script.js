@@ -9,6 +9,7 @@ const state = {
   editId: null,
   previewOffset: 0,
   previewLimit: 5,
+  previewSourceLimit: 100,
 };
 
 const API_BASE = getApiBase();
@@ -72,7 +73,10 @@ function showView(view) {
   state.activeView = view;
 
   if (view === 'all-posts') loadPosts();
-  if (view === 'preview') loadPreview();
+  if (view === 'preview') {
+    state.previewOffset = 0;
+    loadPreview();
+  }
 }
 
 function escapeHtml(value) {
@@ -99,14 +103,28 @@ async function loadPosts() {
     }
 
     for (const post of rows) {
+      const status = String(post.status || '').toLowerCase();
+      const showUndo = status !== 'publish';
+      const actionButtons = [
+        `<button class="action-btn" data-action="edit" data-id="${post.id}" title="Edit">✏️</button>`,
+        `<button class="action-btn trash" data-action="trash" data-id="${post.id}" title="Pindahkan ke Trashed">🗑️</button>`,
+      ];
+
+      if (showUndo) {
+        actionButtons.push(`
+          <button class="action-btn undo" data-action="undo" data-id="${post.id}" data-status="${status}" title="Kembalikan ke Draft">
+            ↩️
+          </button>
+        `);
+      }
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${escapeHtml(post.title)}</td>
         <td>${escapeHtml(post.category)}</td>
         <td>
           <div class="action-icons">
-            <button class="action-btn" data-action="edit" data-id="${post.id}" title="Edit">✏️</button>
-            <button class="action-btn trash" data-action="trash" data-id="${post.id}" title="Pindahkan ke Trashed">🗑️</button>
+            ${actionButtons.join('')}
           </div>
         </td>
       `;
@@ -119,6 +137,10 @@ async function loadPosts() {
 
     tableBody.querySelectorAll('[data-action="trash"]').forEach((btn) => {
       btn.addEventListener('click', () => moveToTrash(btn.dataset.id));
+    });
+
+    tableBody.querySelectorAll('[data-action="undo"]').forEach((btn) => {
+      btn.addEventListener('click', () => moveToDraft(btn.dataset.id));
     });
   } catch (error) {
     notify(error.message);
@@ -161,6 +183,34 @@ async function moveToTrash(id) {
   }
 }
 
+async function moveToDraft(id) {
+  const post = postCache.find((item) => String(item.id) === String(id));
+  if (!post) {
+    notify('Data tidak ditemukan');
+    return;
+  }
+
+  if ((post.status || '').toLowerCase() === 'draft') {
+    notify('Artikel sudah dalam draft');
+    return;
+  }
+
+  try {
+    await request(`/article/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        ...post,
+        status: 'draft',
+      }),
+    });
+
+    notify('Status artikel dikembalikan ke Draft');
+    await loadPosts();
+  } catch (error) {
+    notify(error.message);
+  }
+}
+
 async function savePost(url, payload) {
   await request(url, {
     method: 'POST',
@@ -176,17 +226,32 @@ function clearEditCache() {
 }
 
 async function loadPreview() {
+  const prevBtn = document.getElementById('previewPrev');
+  const nextBtn = document.getElementById('previewNext');
+  const meta = document.getElementById('previewMeta');
+
   try {
-    const posts = await request(`/article/${state.previewLimit}/${state.previewOffset}`);
-    const published = filterPostsByStatus(posts, 'publish');
+    const posts = await collectPublishedPostsForPreview();
+    const published = Array.isArray(posts) ? posts : [];
+    const pageStart = state.previewOffset;
+    const pageEnd = state.previewOffset + state.previewLimit;
+    const pageItems = published.slice(pageStart, pageEnd);
+
+    if (state.previewOffset > 0 && pageStart >= published.length) {
+      state.previewOffset = Math.max(0, (Math.floor((published.length - 1) / state.previewLimit) * state.previewLimit));
+      return loadPreview();
+    }
 
     previewList.innerHTML = '';
-    if (!published.length) {
+    if (!pageItems.length) {
       previewList.innerHTML = '<div class="preview-card"><p class="muted">Tidak ada artikel publish.</p></div>';
+      prevBtn.disabled = state.previewOffset === 0;
+      nextBtn.disabled = true;
+      meta.textContent = 'Tidak ada artikel publish.';
       return;
     }
 
-    for (const post of published) {
+    for (const post of pageItems) {
       const article = document.createElement('article');
       article.className = 'preview-card';
       article.innerHTML = `
@@ -197,11 +262,36 @@ async function loadPreview() {
       previewList.appendChild(article);
     }
 
-    document.getElementById('previewPrev').disabled = state.previewOffset === 0;
-    document.getElementById('previewNext').disabled = posts.length < state.previewLimit;
+    prevBtn.disabled = state.previewOffset === 0;
+    nextBtn.disabled = pageEnd >= published.length;
+    const currentPage = Math.floor(state.previewOffset / state.previewLimit) + 1;
+    const totalPage = Math.max(1, Math.ceil(published.length / state.previewLimit));
+    meta.textContent = `Halaman ${currentPage} dari ${totalPage}`;
   } catch (error) {
     notify(error.message);
+    previewList.innerHTML = '<div class="preview-card"><p class="muted">Gagal memuat preview.</p></div>';
   }
+}
+
+async function collectPublishedPostsForPreview() {
+  let offset = 0;
+  let allPosts = [];
+
+  while (offset < 500) {
+    const rows = await request(`/article/${state.previewSourceLimit}/${offset}`);
+    if (!Array.isArray(rows) || rows.length === 0) {
+      break;
+    }
+
+    allPosts = allPosts.concat(filterPostsByStatus(rows, 'publish'));
+    if (rows.length < state.previewSourceLimit) {
+      break;
+    }
+
+    offset += state.previewSourceLimit;
+  }
+
+  return allPosts;
 }
 
 document.querySelectorAll('.menu-btn').forEach((btn) => {
@@ -297,4 +387,3 @@ document.getElementById('previewNext').addEventListener('click', () => {
 });
 
 showView('all-posts');
-loadPosts();

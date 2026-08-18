@@ -196,6 +196,11 @@ th:nth-child(3) { width: 24%; text-align: center; }
   border-color: rgba(230, 70, 95, 0.35);
 }
 
+.action-btn.undo {
+  color: var(--accent);
+  border-color: rgba(20, 184, 166, 0.35);
+}
+
 .action-btn:hover {
   background: #f1f5ff;
 }
@@ -299,8 +304,26 @@ textarea {
   white-space: pre-line;
 }
 
+.pagination-controls {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.pagination-meta {
+  margin-top: 8px;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
 .muted {
   color: var(--text-soft);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
 }
 
 .toast {
